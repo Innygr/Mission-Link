@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSBluetoothAlwaysUsageDescription</key>
+  <string>MissionLink uses Bluetooth to connect directly to your MissionLink radio and send local commands.</string>
+  <key>UILaunchScreen</key>
+  <dict/>
+</dict>
+</plist>

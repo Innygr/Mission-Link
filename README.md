@@ -16,6 +16,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Binary packet format:** `docs/PACKET_FORMAT.md` (protocol v1 codec layout and validation rules).
 - **Radio bring-up checklist:** `docs/RADIO_BRINGUP.md` (staged hardware validation; RF remains disabled).
 - **Mesh routing module:** `src/mesh_router.cpp` and `include/mesh_router.h` (RF-independent routing policy and native simulation tests; not connected to the radio).
+- **Node presets:** `docs/NODE_PRESETS.md` — Client, Repeater, and Gateway roles.
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is defined in GitHub Actions; physical-device BLE behavior still needs testing.
 
@@ -29,6 +30,7 @@ A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The late
 - Versioned packet codec with bounded fields
 - Relay-ready packet metadata (hop limit, hop count, message ID)
 - RF-independent mesh forwarding policy with duplicate suppression, bounded hop counts, and forwarding rate limits (simulator only)
+- Client / Repeater / Gateway routing presets (volatile selection; radio integration pending)
 - PlatformIO host-independent protocol tests, including malformed-frame rejection
 - JSON Lines status/help/error events shared by USB serial and BLE
 - Bounded command input: oversized USB lines are discarded whole, and oversized BLE writes are rejected

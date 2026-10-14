@@ -11,12 +11,13 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Web/PWA:** `web/` — responsive local dashboard, installable web app manifest, offline static-asset caching, and a USB serial console in supported desktop Chromium browsers.
 - **Apple app:** `apple/MissionLink/` — SwiftUI + Core Bluetooth starter targeting iOS 18 and later. It uses the GATT UUIDs currently in `src/main.cpp`.
 - **Architecture notes:** `docs/CLIENT_ARCHITECTURE.md`.
+- **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter and must be opened in Xcode, built, and tested on a physical device; no build/device validation has been performed yet.
 
 A GitHub Actions workflow is included to deploy `web/` to GitHub Pages. In the repository settings, set Pages' build/deployment source to **GitHub Actions** before expecting a published site.
 
-## Firmware scaffold
+## Firmware scaffold (0.2.0)
 
 - USB serial command interface
 - BLE GATT command interface (ESP32-S3)

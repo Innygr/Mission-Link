@@ -44,3 +44,17 @@ jobs:
         run: python -m pip install --upgrade platformio
       - name: Compile ESP32-S3 firmware scaffold
         run: pio run -e xiao_esp32s3
+      - name: Stage complete flash set
+        run: |
+          mkdir -p dist/missionlink-firmware
+          cp .pio/build/xiao_esp32s3/bootloader.bin dist/missionlink-firmware/
+          cp .pio/build/xiao_esp32s3/partitions.bin dist/missionlink-firmware/
+          cp .pio/build/xiao_esp32s3/firmware.bin dist/missionlink-firmware/
+          cp "$HOME/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin" dist/missionlink-firmware/
+      - name: Upload flash-ready firmware set
+        uses: actions/upload-artifact@v4
+        with:
+          name: missionlink-firmware-${{ github.sha }}
+          path: dist/missionlink-firmware/
+          if-no-files-found: error
+          retention-days: 14

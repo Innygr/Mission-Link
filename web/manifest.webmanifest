@@ -7,5 +7,11 @@
   "display": "standalone",
   "background_color": "#101820",
   "theme_color": "#101820",
-  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "icons": [
+    {
+      "src": "./assets/MissionLinkLogo.png",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }

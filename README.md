@@ -14,6 +14,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Security and glyph transport design:** `docs/CIPHER_SUITES.md` (design proposal; not implemented in firmware yet).
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.
 - **Binary packet format:** `docs/PACKET_FORMAT.md` (protocol v1 codec layout and validation rules).
+- **Radio bring-up checklist:** `docs/RADIO_BRINGUP.md` (staged hardware validation; RF remains disabled).
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is defined in GitHub Actions; physical-device BLE behavior still needs testing.
 

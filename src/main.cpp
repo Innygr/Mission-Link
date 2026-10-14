@@ -11,8 +11,9 @@ static String commandBuffer;
 
 static void report(const String& jsonLine) {
   Serial.println(jsonLine);
-  if (txChar && txChar->getSubscribedCount() > 0) {
+  if (txChar) {
     txChar->setValue(jsonLine.c_str());
+    // NimBLE-Arduino 2.x handles the no-subscriber case in notify().
     txChar->notify();
   }
 }
@@ -77,7 +78,6 @@ void setup() {
       TX_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);
   rx->setCallbacks(new RxCallbacks());
   txChar->setValue("{\"type\":\"ready\",\"firmware\":\"0.2.0\",\"rfEnabled\":false}");
-  service->start();
   NimBLEDevice::getAdvertising()->addServiceUUID(SERVICE_UUID);
   NimBLEDevice::getAdvertising()->start();
   Serial.println("{\"type\":\"ble\",\"advertising\":true}");

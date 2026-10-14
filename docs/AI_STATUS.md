@@ -30,8 +30,8 @@ Ownership above records the intended starting split; it does not assert that a t
 - **Status:** implemented in source; CI result not yet confirmed.
 - **Changed paths:** `src/main.cpp`, `docs/CLIENT_PROTOCOL.md`, `docs/TESTING_GUIDE.md`, `README.md`.
 - **Change:** the `status` command now reports the adapter's actual `radioReady`, `radioInitialized`, `radioReceiving`, and `radioState` values instead of hardcoding `radioReady:false`; docs clarify that guarded receive-to-router wiring exists but real RF/mesh delivery is unverified.
-- **Validation:** fetched changed files back from GitHub and inspected the updated status code and documentation. No local firmware build, native test run, or physical hardware test was performed in this environment.
-- **Next action:** inspect the firmware CI run and fix any compile/test failures before adding more behavior.
+- **Validation:** fetched changed files back from GitHub and inspected the updated status code and documentation. GitHub Actions native packet/mesh tests passed on the firmware-status commit. The ESP32-S3 compile was still running at last check; no physical hardware test was performed.
+- **Next action:** confirm the ESP32-S3 build result and fix any compile failures before adding more behavior.
 
 
 Add newest entries at the top. Link to the commit, PR, or issue whenever possible.

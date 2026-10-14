@@ -23,6 +23,33 @@
     sendButton.disabled = !connected;
     $("transport-detail").textContent = connected ? "Connected through Web Serial. RF remains disabled in this firmware." : "Waiting for a local connection";
   }
+  function handleFirmwareLine(line) {
+    try {
+      const event = JSON.parse(line);
+      if (event.type === "status") {
+        const rf = event.rfEnabled ? "enabled" : "disabled";
+        $("firmware-status").textContent = "Firmware " + event.firmware + " · RF " + rf;
+        $("node-count").textContent = event.knownNodeCount ?? "—";
+        log("Status received: firmware " + event.firmware + ", RF " + rf + ".");
+        return;
+      }
+      if (event.type === "nodes") {
+        $("node-count").textContent = Array.isArray(event.items) ? event.items.length : "—";
+        log("Node discovery is not ready yet.");
+        return;
+      }
+      if (event.type === "error") {
+        log("Error [" + event.code + "]: " + event.message);
+        return;
+      }
+      if (event.type === "boot" || event.type === "ready") {
+        $("firmware-status").textContent = "Firmware " + event.firmware + " · RF disabled";
+      }
+      log(line);
+    } catch {
+      log(line);
+    }
+  }
   async function connect() {
     if (!("serial" in navigator)) {
       log("Web Serial is unavailable in this browser. Try a supported desktop Chromium browser, or use the native iOS app for Bluetooth.", "log-muted");
@@ -53,10 +80,7 @@
           if (value) {
             const text = decoder.decode(value, {stream:true});
             text.split(/\r?\n/).filter(Boolean).forEach(line => {
-              log(line);
-              if (line.startsWith("MissionLink ")) $("firmware-status").textContent = line;
-              const count = line.match(/Known nodes:\s*(\d+)/i);
-              if (count) $("node-count").textContent = count[1];
+              handleFirmwareLine(line);
             });
           }
         }

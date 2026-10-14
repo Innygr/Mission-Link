@@ -4,7 +4,12 @@ Version 1 of the local USB serial/BLE command interface uses UTF-8 commands from
 
 ## Commands
 
-Commands are case-sensitive, trimmed UTF-8 strings. Current accepted command forms:
+Commands are case-sensitive, trimmed UTF-8 strings. Firmware bounds command input to 256 bytes:
+
+- USB serial input is processed as newline-delimited commands. An overlong line is discarded in full; the truncated prefix is never dispatched.
+- Each BLE write must be 256 bytes or fewer. Oversized writes are rejected.
+
+Current accepted command forms:
 
 - `help`
 - `status`
@@ -18,10 +23,10 @@ The final four command families are placeholders and return `type=error` until t
 
 ## Events
 
-Status response:
+Status response (firmware 0.2.1):
 
 ```json
-{"type":"status","firmware":"0.2.0","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false}
+{"type":"status","firmware":"0.2.1","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false}
 ```
 
 Node discovery response:
@@ -36,7 +41,7 @@ Error response:
 {"type":"error","code":"not_ready","message":"Direct messaging is unavailable until radio and encryption are implemented."}
 ```
 
-Boot and BLE events report firmware startup/advertising. Clients should tolerate unknown event types and optional fields for forward compatibility.
+Boot and BLE events report firmware startup/advertising. Clients should tolerate unknown event types and optional fields for forward compatibility. BLE notification delivery is best-effort; clients should not treat a command write as proof that a response was received.
 
 ## Security boundaries
 

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="description" content="Flash MissionLink firmware to XIAO ESP32-S3 boards over USB.">
+  <link rel="icon" href="./assets/MissionLinkLogo.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./flasher.css">
+  <title>MissionLink Flasher</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="MissionLink home"><img class="brand-logo" src="./assets/MissionLinkLogo.png" alt=""><span>MissionLink<small>FIRMWARE FLASHER</small></span></a>
+    <a class="flasher-back" href="./">← Back to console</a>
+  </header>
+  <main class="shell flasher-shell">
+    <section class="hero flasher-hero">
+      <div><p class="eyebrow">DEVICE TOOLS / USB</p><h1>Flash your<br><em>XIAO.</em></h1><p class="lede">Install a firmware build on a Seeed XIAO ESP32-S3 directly from a supported desktop Chromium browser. No separate flasher app required.</p></div>
+      <div class="flasher-chip" aria-hidden="true"><span>ESP32-S3</span><i></i><i></i><i></i><i></i></div>
+    </section>
+    <section class="notice flasher-warning"><span class="notice-icon">!</span><div><strong>Firmware flashing can erase data</strong><p>Use firmware built for the exact board. This tool does not enable radio transmission; MissionLink RF stays disabled until radio wiring, configuration, security, and Canadian compliance are verified. Never flash files from an untrusted source.</p></div></section>
+    <section class="panel flasher-panel">
+      <div class="panel-heading"><div><p class="eyebrow">01 / CONNECT</p><h2>Connect your board</h2></div><span class="icon-chip">⌁</span></div>
+      <p class="muted">Use a USB data cable. If the board is not detected, hold BOOT while connecting it, then release BOOT.</p>
+      <div class="flasher-actions"><button id="connect" class="button button-primary">Connect XIAO</button><button id="disconnect" class="button button-quiet" disabled>Disconnect</button></div>
+      <div id="device-status" class="flasher-status" role="status">No device connected</div>
+    </section>
+    <section class="panel flasher-panel">
+      <div class="panel-heading"><div><p class="eyebrow">02 / FIRMWARE</p><h2>Select build files</h2></div><span class="icon-chip">↥</span></div>
+      <p class="muted">Choose the four binaries produced by a compatible ESP32-S3 build. Addresses follow the standard ESP32-S3 PlatformIO layout.</p>
+      <div class="file-grid">
+        <label class="firmware-file"><span>Bootloader <b>0x0000 · required</b></span><input id="bootloader" type="file" accept=".bin,application/octet-stream" required><small id="bootloader-name">No file selected</small></label>
+        <label class="firmware-file"><span>Partition table <b>0x8000 · required</b></span><input id="partitions" type="file" accept=".bin,application/octet-stream" required><small id="partitions-name">No file selected</small></label>
+        <label class="firmware-file"><span>Boot app <b>0xE000 · optional</b></span><input id="bootapp" type="file" accept=".bin,application/octet-stream"><small id="bootapp-name">No file selected</small></label>
+        <label class="firmware-file"><span>Application <b>0x10000 · required</b></span><input id="application" type="file" accept=".bin,application/octet-stream" required><small id="application-name">No file selected</small></label>
+      </div>
+      <div class="file-note">These must be separate binaries for this layout—not a merged image. Files are read locally in your browser and are not uploaded.</div>
+    </section>
+    <section class="panel flasher-panel">
+      <div class="panel-heading"><div><p class="eyebrow">03 / INSTALL</p><h2>Flash & verify</h2></div><span class="icon-chip">✓</span></div>
+      <label class="erase-option"><input id="erase-all" type="checkbox"><span><strong>Erase all flash first</strong><small>Removes existing settings and stored data. Leave unchecked unless you specifically need a clean install.</small></span></label>
+      <div class="progress-meta"><span id="progress-label">Waiting to flash</span><span id="progress-percent">0%</span></div>
+      <progress id="progress" max="100" value="0"></progress>
+      <button id="flash" class="button button-primary flash-button" disabled>Flash firmware</button>
+      <p class="small muted">Keep the board plugged in during flashing. Do not close this tab or disconnect USB until the operation finishes. The flasher reports write progress; a successful write is not proof that the firmware works on your specific hardware.</p>
+      <div id="flash-result" class="flash-result" role="status" aria-live="polite"></div>
+    </section>
+    <section class="panel flasher-panel console-panel">
+      <div class="panel-heading"><div><p class="eyebrow">04 / LOG</p><h2>Flasher output</h2></div><button id="clear-log" class="text-button">Clear</button></div>
+      <pre id="flasher-log" class="flasher-log" role="log" aria-live="polite">Ready. Connect a board to begin.</pre>
+    </section>
+    <footer><span>MISSIONLINK · FLASH LOCALLY</span><span>RF DISABLED IN CURRENT FIRMWARE</span></footer>
+  </main>
+  <script type="module" src="./flasher.js"></script>
+</body>
+</html>

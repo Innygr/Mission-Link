@@ -1,3 +1,18 @@
+### 2026-10-14 — Radio check against maker100 lora-p2p + 72×40 ML Kit screen
+- **Owner:** Claude (requested by maintainer)
+- **Status:** pushed to branch `claude/zen-cerf-x5xdd9`; ChatGPT review requested, because `src/missionlink_radio.cpp` is in ChatGPT's area.
+- **Compared against:** maker100-leaders-robotics `new2026/lora-p2p.txt` (= `firmware-lora-p2p-v015.ino`, the Wio-SX1262 plugged into the XIAO's B2B connector) and Meshtastic `variants/esp32s3/seeed_xiao_s3/variant.h`. `lora-p2p-v2` v008 uses a different, hand-wired pin map (D0–D3) and doesn't apply.
+- **Matched already:** SCK 7, MISO 8, MOSI 9, NSS 41, RST 42, BUSY 40, DIO1 39; 915.0 MHz, BW 125, SF 9, CR 4/7; DIO2 RF switch (RadioLib 7.8.1 `begin()` enables it by default).
+- **Fixed (commit "Radio: detect received packets via DIO1…"):**
+  1. `poll()` used `radio.available()`, which in RadioLib only counts direct-mode receive bytes (`PhysicalLayer.cpp:449`), so no LoRa packet would ever have been reported. It now uses a DIO1 packet-received interrupt flag, like v015.
+  2. The TCXO voltage was 1.6 V; the Wio-SX1262 uses 1.8 V (v015 `setTCXO(1.8)`, Meshtastic `SX126X_DIO3_TCXO_VOLTAGE 1.8`). It is now the required `ML_RADIO_TCXO_VOLTAGE=1.8` in `platformio.ini`.
+  3. GPIO38 was held high permanently. Meshtastic treats it as an RX-enable line (`SX126X_RXEN 38`, TXEN NC), so it is now `setRfSwitchPins(38, RADIOLIB_NC)`, and RadioLib drives it low outside receive. This matters once TX is enabled.
+- **Not changed (maintainer decision):** sync word stays 0x12. v015's `setSyncWord(0x3444)` is truncated by RadioLib's `uint8_t` parameter to 0x44, so MissionLink and lora-p2p nodes ignore each other. TX power and `ML_RF_ENABLED=0` are untouched.
+- **Screen:** the maintainer uses the XIAO ML Kit 72×40 SSD1306, now the default (`U8G2_SSD1306_72X40_ER`, R2, 5×7 font, 5 rows). 128×64 stays available via `-D ML_DISPLAY_128X64=1`.
+- **Validation:** `pio test -e native` → 40/40; `pio run -e xiao_esp32s3` → SUCCESS. Host render of both layouts through U8g2's real SSD1306 frame buffers: all rows fit.
+- **Not validated:** anything on hardware: actual packet reception, TCXO start-up, the RX-enable line, and the OLED.
+- **Next:** maintainer: flash a board with the ML Kit screen, plus a second node running lora-p2p v015 **with its sync word changed to 0x12**. MissionLink should report its frames as `decode_error`, which proves RX works; or use two MissionLink nodes once TX is approved. ChatGPT: review the radio diff.
+
 ### 2026-10-14 — Optional OLED connectivity status screen
 - **Owner:** Claude (requested by maintainer)
 - **Status:** pushed to branch `claude/zen-cerf-x5xdd9`; review requested. Firmware change outside Claude's default flasher area, so ChatGPT please review.

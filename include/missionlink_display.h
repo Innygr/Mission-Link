@@ -22,13 +22,25 @@ struct ConnectivitySnapshot {
   const char* preset;
 };
 
-// 128x64 SSD1306 with a 6x10 font: 6 rows of up to 21 characters.
+enum class DisplayLayout : uint8_t {
+  Compact72x40,  // XIAO ML Kit 0.42" SSD1306, 5x7 font: 5 rows x 14 characters (default)
+  Wide128x64,    // XIAO expansion board 0.96" SSD1306, 6x10 font: 6 rows x 21 characters
+};
+
+// Buffer size large enough for either layout.
 static constexpr size_t kDisplayRows = 6;
 static constexpr size_t kDisplayCols = 21;
 
-// Pure text layout for the status screen (host-testable). Each row is NUL-terminated
-// and truncated to kDisplayCols characters.
-void formatStatusLines(const ConnectivitySnapshot& s, char rows[kDisplayRows][kDisplayCols + 1]);
+struct DisplayGeometry {
+  size_t rows;
+  size_t cols;
+};
+DisplayGeometry displayGeometry(DisplayLayout layout);
+
+// Pure text layout for the status screen (host-testable). Fills displayGeometry(layout).rows
+// rows, each NUL-terminated and truncated to displayGeometry(layout).cols characters.
+void formatStatusLines(const ConnectivitySnapshot& s, DisplayLayout layout,
+                       char rows[kDisplayRows][kDisplayCols + 1]);
 
 // Optional I2C OLED status screen. Probes for an SSD1306 at 0x3C/0x3D; if nothing
 // answers, it stays inactive and re-probes occasionally so a screen attached later is found.

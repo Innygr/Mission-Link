@@ -15,6 +15,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.
 - **Binary packet format:** `docs/PACKET_FORMAT.md` (protocol v1 codec layout and validation rules).
 - **Radio bring-up checklist:** `docs/RADIO_BRINGUP.md` (staged hardware validation; RF remains disabled).
+- **Mesh routing module:** `src/mesh_router.cpp` and `include/mesh_router.h` (RF-independent routing policy and native simulation tests; not connected to the radio).
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is defined in GitHub Actions; physical-device BLE behavior still needs testing.
 
@@ -27,6 +28,7 @@ A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The late
 - Direct node addressing and group/channel addressing in the packet model
 - Versioned packet codec with bounded fields
 - Relay-ready packet metadata (hop limit, hop count, message ID)
+- RF-independent mesh forwarding policy with duplicate suppression, bounded hop counts, and forwarding rate limits (simulator only)
 - PlatformIO host-independent protocol tests, including malformed-frame rejection
 - JSON Lines status/help/error events shared by USB serial and BLE
 - Bounded command input: oversized USB lines are discarded whole, and oversized BLE writes are rejected
@@ -41,7 +43,7 @@ pio run
 pio test -e native
 ```
 
-The `esp32-s3-devkitc-1` target is a starting compile target only; it does not guarantee that the XIAO/Wio board wiring is configured correctly. CI runs a native packet-codec test suite and compiles the ESP32-S3 scaffold; the exact hardware configuration and RF operation still require bench testing.
+The `esp32-s3-devkitc-1` target is a starting compile target only; it does not guarantee that the XIAO/Wio board wiring is configured correctly. CI runs native packet-codec and mesh-policy tests and compiles the ESP32-S3 scaffold; the exact hardware configuration and RF operation still require bench testing.
 
 ## Serial/BLE commands (planned MVP)
 
@@ -61,7 +63,7 @@ Production encryption/key provisioning is not implemented yet. The planned ciphe
 
 ## Network model
 
-- **Implementation order:** mesh routing first, then direct P2P optimisation. See [mesh-first routing plan](docs/MESH_FIRST_ROUTING.md) and [mesh routing test plan](docs/MESH_ROUTING_TEST_PLAN.md).
+- **Implementation order:** mesh routing first, then direct P2P optimisation. See [mesh-first routing plan](docs/MESH_FIRST_ROUTING.md), [mesh routing test plan](docs/MESH_ROUTING_TEST_PLAN.md), and [mesh simulator implementation notes](docs/MESH_ROUTER_SIMULATOR.md).
 
 - **Direct node connection:** unicast to one node ID.
 - **Group channel:** group ID in the packet; group members decrypt with that group's key.

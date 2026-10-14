@@ -10,7 +10,8 @@ static ml::Packet makePacket(ml::AddressMode mode=ml::AddressMode::Direct){
 }
 void test_mesh_three_node_forwarding_increments_once(){ ml::MeshRouter r; auto p=makePacket(); ml::Packet f;
  TEST_ASSERT_EQUAL((int)ml::MeshAction::ForwardOnly,(int)r.process(p,B,10,f)); TEST_ASSERT_EQUAL_UINT8(1,f.hopCount);
- TEST_ASSERT_EQUAL((int)ml::MeshAction::DeliverLocal,(int)r.process(f,C,11,p)); }
+ ml::MeshRouter atC;
+ TEST_ASSERT_EQUAL((int)ml::MeshAction::DeliverLocal,(int)atC.process(f,C,11,p)); }
 void test_mesh_duplicate_suppressed(){ ml::MeshRouter r; auto p=makePacket(ml::AddressMode::Broadcast); ml::Packet f;
  TEST_ASSERT_EQUAL((int)ml::MeshAction::DeliverAndForward,(int)r.process(p,B,10,f));
  TEST_ASSERT_EQUAL((int)ml::MeshAction::DropDuplicate,(int)r.process(p,B,11,f)); }

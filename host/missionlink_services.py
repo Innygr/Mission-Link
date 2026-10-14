@@ -7,8 +7,10 @@ LoRa radio node. It deliberately does not open sockets or enable RF.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import ipaddress
 import re
 from typing import Iterable
+from urllib.parse import urlsplit
 
 SERVICE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 CAPABILITY_RE = SERVICE_ID_RE
@@ -19,10 +21,38 @@ CURRENT_MESH_PAYLOAD_MAX = 180
 DEFAULT_MESH_INLINE_MAX = 96
 MAX_SERVICE_COUNT = 128
 MAX_CAPABILITIES = 16
+ALLOWED_TRANSPORTS = frozenset({"lan", "usb-serial", "bluetooth"})
 
 
 class RegistryError(ValueError):
     """Raised when a service registration violates the bounded schema."""
+
+
+def _is_valid_endpoint(endpoint: str) -> bool:
+    """Accept loopback HTTP or HTTPS URLs; reject ambiguous URL forms."""
+    try:
+        parsed = urlsplit(endpoint)
+        # Accessing .port validates the port syntax/range.
+        _ = parsed.port
+    except (ValueError, UnicodeError):
+        return False
+
+    if parsed.scheme == "https":
+        return bool(parsed.hostname) and parsed.username is None and parsed.password is None
+
+    if parsed.scheme != "http" or parsed.username is not None or parsed.password is not None:
+        return False
+    if parsed.port is None or not parsed.hostname:
+        return False
+    if parsed.path and parsed.path != "/" and not parsed.path.startswith("/"):
+        return False
+    hostname = parsed.hostname.rstrip(".").lower()
+    if hostname == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        return False
 
 
 @dataclass(frozen=True)
@@ -37,41 +67,53 @@ class ServiceRecord:
     max_inline_request_bytes: int = DEFAULT_MESH_INLINE_MAX
 
     def validate(self) -> None:
-        if not SERVICE_ID_RE.fullmatch(self.service_id):
+        if not isinstance(self.service_id, str) or not SERVICE_ID_RE.fullmatch(self.service_id):
             raise RegistryError("invalid_service_id")
-        if not SERVICE_ID_RE.fullmatch(self.host_id):
+        if not isinstance(self.host_id, str) or not SERVICE_ID_RE.fullmatch(self.host_id):
             raise RegistryError("invalid_host_id")
-        if not self.display_name or len(self.display_name) > 80:
+        if not isinstance(self.display_name, str) or not self.display_name.strip() or len(self.display_name) > 80:
             raise RegistryError("invalid_display_name")
-        if not self.capabilities or len(self.capabilities) > MAX_CAPABILITIES:
+        if not isinstance(self.capabilities, tuple) or not self.capabilities or len(self.capabilities) > MAX_CAPABILITIES:
             raise RegistryError("invalid_capabilities")
+        if any(not isinstance(cap, str) for cap in self.capabilities):
+            raise RegistryError("invalid_capability")
         if len(set(self.capabilities)) != len(self.capabilities):
             raise RegistryError("duplicate_capability")
         if any(not CAPABILITY_RE.fullmatch(cap) for cap in self.capabilities):
             raise RegistryError("invalid_capability")
-        allowed_transports = {"lan", "usb-serial", "bluetooth"}
-        if not self.transports or any(t not in allowed_transports for t in self.transports):
+        if not isinstance(self.transports, tuple) or not self.transports:
             raise RegistryError("invalid_transport")
-        if self.max_inline_request_bytes < 1 or self.max_inline_request_bytes > DEFAULT_MESH_INLINE_MAX:
+        if any(not isinstance(transport, str) or transport not in ALLOWED_TRANSPORTS for transport in self.transports):
+            raise RegistryError("invalid_transport")
+        if len(set(self.transports)) != len(self.transports):
+            raise RegistryError("duplicate_transport")
+        if isinstance(self.max_inline_request_bytes, bool) or not isinstance(self.max_inline_request_bytes, int):
+            raise RegistryError("invalid_inline_limit")
+        if not 1 <= self.max_inline_request_bytes <= DEFAULT_MESH_INLINE_MAX:
             raise RegistryError("inline_limit_out_of_range")
-        if self.endpoint is not None and len(self.endpoint) > 512:
-            raise RegistryError("endpoint_too_long")
-        # Mesh announcements must not include arbitrary endpoint URLs. They
-        # may contain only service metadata; direct endpoints are local-only.
-        if self.endpoint is not None and not self.endpoint.startswith(("http://127.0.0.1:", "http://localhost:", "https://")):
-            raise RegistryError("endpoint_must_be_local_or_https")
+        if not isinstance(self.healthy, bool):
+            raise RegistryError("invalid_health")
+        if self.endpoint is not None:
+            if not isinstance(self.endpoint, str) or len(self.endpoint) > 512:
+                raise RegistryError("endpoint_too_long")
+            # Mesh announcements must not include arbitrary endpoint URLs.
+            # Remote endpoints require HTTPS; plaintext HTTP is loopback-only.
+            if not _is_valid_endpoint(self.endpoint):
+                raise RegistryError("endpoint_must_be_local_http_or_https")
 
 
 class ServiceRegistry:
     """Bounded in-memory registry for services reachable through a host bridge."""
 
     def __init__(self, max_services: int = MAX_SERVICE_COUNT) -> None:
-        if not 1 <= max_services <= MAX_SERVICE_COUNT:
+        if isinstance(max_services, bool) or not isinstance(max_services, int) or not 1 <= max_services <= MAX_SERVICE_COUNT:
             raise ValueError("max_services_out_of_range")
         self._max_services = max_services
         self._records: dict[str, ServiceRecord] = {}
 
     def register(self, record: ServiceRecord) -> None:
+        if not isinstance(record, ServiceRecord):
+            raise RegistryError("invalid_service_record")
         record.validate()
         if record.service_id not in self._records and len(self._records) >= self._max_services:
             raise RegistryError("registry_full")
@@ -84,11 +126,13 @@ class ServiceRegistry:
         return self._records.get(service_id)
 
     def list(self, capability: str | None = None, healthy_only: bool = True) -> tuple[ServiceRecord, ...]:
+        if not isinstance(healthy_only, bool):
+            raise RegistryError("invalid_health_filter")
         records: Iterable[ServiceRecord] = self._records.values()
         if healthy_only:
             records = (record for record in records if record.healthy)
         if capability is not None:
-            if not CAPABILITY_RE.fullmatch(capability):
+            if not isinstance(capability, str) or not CAPABILITY_RE.fullmatch(capability):
                 raise RegistryError("invalid_capability_filter")
             records = (record for record in records if capability in record.capabilities)
         return tuple(sorted(records, key=lambda item: item.service_id))
@@ -103,6 +147,7 @@ def mesh_inline_allowed(payload_bytes: int, service: ServiceRecord) -> bool:
     return (
         isinstance(payload_bytes, int)
         and not isinstance(payload_bytes, bool)
+        and isinstance(service, ServiceRecord)
         and 0 <= payload_bytes <= service.max_inline_request_bytes
         and payload_bytes <= CURRENT_MESH_PAYLOAD_MAX
     )

@@ -94,8 +94,7 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
   }
   async function connect() {
     refreshFileLabels();
-  loadDefaultFirmware();
-  if (!("serial" in navigator)) {
+    if (!("serial" in navigator)) {
       log("Web Serial is not available. Use desktop Chrome or Edge over HTTPS, with a USB data cable.");
       setResult("This browser cannot flash USB serial devices.", "error");
       return;
@@ -256,4 +255,7 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
     statusBox.textContent = "Web Serial unavailable in this browser. Use desktop Chrome or Edge.";
     log("Web Serial is unavailable in this browser. iPhone/iPad Safari cannot run this USB flasher.");
   }
+  // Load the official firmware immediately; connecting the board is a separate step.
+  refreshFileLabels();
+  void loadDefaultFirmware();
 })();

@@ -58,9 +58,23 @@
 #ifndef ML_RADIO_TX_POWER_DBM
 #error "Set the verified compliant TX power in the board config"
 #endif
+#ifndef ML_RADIO_TCXO_VOLTAGE
+#error "Set the module's TCXO supply voltage in the board config"
+#endif
 
 static Module radioModule(ML_RADIO_CS, ML_RADIO_DIO1, ML_RADIO_RESET, ML_RADIO_BUSY);
 static SX1262 radio(&radioModule);
+
+// Set from the DIO1 interrupt when a packet has been received (RX_DONE is the only
+// IRQ routed to DIO1 by startReceive()). RadioLib's available() is not usable here:
+// it only counts bytes from its direct-receive mode, so it stays 0 in packet mode.
+static volatile bool packetReceived = false;
+static void IRAM_ATTR onPacketReceived() { packetReceived = true; }
+
+static int16_t startListening() {
+  packetReceived = false;
+  return radio.startReceive();
+}
 #endif
 
 namespace ml {
@@ -83,24 +97,27 @@ bool MissionLinkRadio::beginReceive() {
   return false;
 #else
   if (!initialized_) {
-    // The Wio-SX1262 RF path is switched separately from the SX1262 itself.
-    pinMode(ML_RADIO_ANT_SW, OUTPUT);
-    digitalWrite(ML_RADIO_ANT_SW, HIGH);
+    // Wio-SX1262 RF path: DIO2 drives the antenna switch (RadioLib's begin() enables
+    // that by default) and ML_RADIO_ANT_SW is an RX-enable line. RadioLib holds it high
+    // while receiving and low otherwise, matching Meshtastic's seeed_xiao_s3 variant
+    // (SX126X_RXEN 38, SX126X_TXEN NC).
+    radio.setRfSwitchPins(ML_RADIO_ANT_SW, RADIOLIB_NC);
     SPI.begin(ML_RADIO_SCK, ML_RADIO_MISO, ML_RADIO_MOSI, ML_RADIO_CS);
     const int16_t rc = radio.begin(ML_RADIO_FREQ_MHZ, ML_RADIO_BANDWIDTH_KHZ,
                                    ML_RADIO_SPREADING_FACTOR, ML_RADIO_CODING_RATE,
                                    ML_RADIO_SYNC_WORD, ML_RADIO_TX_POWER_DBM,
-                                   8, 1.6);
+                                   8, ML_RADIO_TCXO_VOLTAGE);
     if (rc != RADIOLIB_ERR_NONE) {
       state_ = RadioState::ReceiveError;
       initialized_ = false;
       receiving_ = false;
       return false;
     }
+    radio.setPacketReceivedAction(onPacketReceived);
     initialized_ = true;
   }
 #if ML_RADIO_RX_ENABLED
-  const int16_t rc = radio.startReceive();
+  const int16_t rc = startListening();
   if (rc != RADIOLIB_ERR_NONE) {
     state_ = RadioState::ReceiveError;
     receiving_ = false;
@@ -121,10 +138,11 @@ bool MissionLinkRadio::poll(Packet& packet) {
   (void)packet;
   return false;
 #else
-  if (!initialized_ || !receiving_ || !radio.available()) return false;
+  if (!initialized_ || !receiving_ || !packetReceived) return false;
+  packetReceived = false;
   const size_t length = radio.getPacketLength();
   if (length < 32 || length > 32 + ML_MAX_PAYLOAD) {
-    const int16_t restartRc = radio.startReceive();
+    const int16_t restartRc = startListening();
     receiving_ = restartRc == RADIOLIB_ERR_NONE;
     state_ = receiving_ ? RadioState::DecodeError : RadioState::ReceiveError;
     return false;
@@ -133,7 +151,7 @@ bool MissionLinkRadio::poll(Packet& packet) {
   const int16_t rc = radio.readData(buffer, length);
   lastRssi_ = static_cast<int16_t>(radio.getRSSI());
   lastSnr_ = static_cast<int8_t>(radio.getSNR());
-  const int16_t restartRc = radio.startReceive();
+  const int16_t restartRc = startListening();
   receiving_ = restartRc == RADIOLIB_ERR_NONE;
   if (!receiving_) {
     state_ = RadioState::ReceiveError;
@@ -167,7 +185,7 @@ bool MissionLinkRadio::transmit(const Packet& packet) {
   const int16_t rc = radio.transmit(frame.data(), frame.size());
   if (rc != RADIOLIB_ERR_NONE) {
     if (ML_RADIO_RX_ENABLED) {
-      receiving_ = radio.startReceive() == RADIOLIB_ERR_NONE;
+      receiving_ = startListening() == RADIOLIB_ERR_NONE;
       state_ = receiving_ ? RadioState::TransmitError : RadioState::ReceiveError;
     } else {
       receiving_ = false;
@@ -176,7 +194,7 @@ bool MissionLinkRadio::transmit(const Packet& packet) {
     return false;
   }
   if (ML_RADIO_RX_ENABLED) {
-    receiving_ = radio.startReceive() == RADIOLIB_ERR_NONE;
+    receiving_ = startListening() == RADIOLIB_ERR_NONE;
     state_ = receiving_ ? RadioState::Ready : RadioState::ReceiveError;
   } else {
     receiving_ = false;

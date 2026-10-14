@@ -26,7 +26,7 @@ Placeholder command families (return `type=error`, code `not_ready`):
 - `join <channel-id>`
 - `leave <channel-id>`
 
-Preset selection is held in RAM only and resets to Client on reboot. It changes the RF-independent routing policy object only; the radio receive/transmit path is not connected.
+Preset selection is held in RAM only and resets to Client on reboot. It changes the RF-independent routing policy object. The guarded radio receive-to-router and forward-to-radio calls are wired into the main loop, but the adapter stays inert with the default unverified pin map, RF transmission is disabled, and local application delivery is not implemented.
 
 ## Events
 

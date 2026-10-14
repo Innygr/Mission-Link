@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
+#include <esp_mac.h>
 #include "missionlink_config.h"
 #include "mesh_router.h"
+#include "missionlink_radio.h"
 
 static const char* BLE_NAME = "MissionLink";
 static const char* SERVICE_UUID = "3f4a0001-7c2e-4a5b-9d11-5b7d6e100001";
@@ -13,6 +15,8 @@ static String commandBuffer;
 static bool discardUntilNewline = false;
 static ml::NodePreset activePreset = ml::NodePreset::Client;
 static ml::MeshRouter meshRouter(activePreset);
+static ml::MissionLinkRadio radioLink;
+static uint8_t localNodeId[8] = {0};
 
 static void report(const String& jsonLine) {
   Serial.println(jsonLine);
@@ -96,6 +100,14 @@ void setup() {
   Serial.println("{\"type\":\"boot\",\"firmware\":\"0.2.1\",\"rfEnabled\":false}");
   Serial.println("{\"type\":\"hint\",\"message\":\"Send help for commands. RF is deliberately disabled.\"}");
 
+  uint8_t mac[6] = {0};
+  if (esp_read_mac(mac, ESP_MAC_WIFI_STA) == ESP_OK) {
+    localNodeId[0] = 'M'; localNodeId[1] = 'L';
+    for (size_t i = 0; i < 6; ++i) localNodeId[i + 2] = mac[i];
+  }
+  // Safe no-op while the verified pin map and radio feature flags are disabled.
+  radioLink.beginReceive();
+
   NimBLEDevice::init(BLE_NAME);
   auto* server = NimBLEDevice::createServer();
   auto* service = server->createService(SERVICE_UUID);
@@ -131,6 +143,28 @@ void loop() {
         discardUntilNewline = true;
       }
     }
+  }
+  // Receive -> validate/deduplicate -> route. The adapter remains inert unless
+  // its verified board config and feature flags are enabled at compile time.
+  ml::Packet incoming;
+  if (radioLink.poll(incoming)) {
+    ml::Packet forwarded;
+    const ml::MeshAction action = meshRouter.process(incoming, localNodeId, millis(), forwarded);
+    if (action == ml::MeshAction::ForwardOnly ||
+        action == ml::MeshAction::DeliverAndForward) {
+      radioLink.transmit(forwarded);
+    }
+    const ml::RadioStatus rs = radioLink.status();
+    String event = "{\"type\":\"mesh\",\"action\":";
+    event += String(static_cast<uint8_t>(action));
+    event += ",\"source\":\"";
+    event += ml::hexId(incoming.source, sizeof(incoming.source)).c_str();
+    event += "\",\"rssi\":";
+    event += String(rs.lastRssi);
+    event += ",\"snr\":";
+    event += String(rs.lastSnr);
+    event += "}";
+    report(event);
   }
   delay(5);
 }

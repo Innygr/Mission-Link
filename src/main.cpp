@@ -49,6 +49,38 @@ static const char* radioStateName(ml::RadioState state) {
   return "unknown";
 }
 
+static const char* meshActionName(ml::MeshAction action) {
+  switch (action) {
+    case ml::MeshAction::DropInvalid: return "drop_invalid";
+    case ml::MeshAction::DropDuplicate: return "drop_duplicate";
+    case ml::MeshAction::DeliverLocal: return "deliver_local";
+    case ml::MeshAction::DeliverAndForward: return "deliver_and_forward";
+    case ml::MeshAction::ForwardOnly: return "forward_only";
+  }
+  return "unknown";
+}
+
+static const char* packetTypeName(ml::PacketType type) {
+  switch (type) {
+    case ml::PacketType::Hello: return "hello";
+    case ml::PacketType::Data: return "data";
+    case ml::PacketType::Ack: return "ack";
+    case ml::PacketType::Status: return "status";
+    case ml::PacketType::Join: return "join";
+    case ml::PacketType::Leave: return "leave";
+  }
+  return "unknown";
+}
+
+static const char* addressModeName(ml::AddressMode mode) {
+  switch (mode) {
+    case ml::AddressMode::Direct: return "direct";
+    case ml::AddressMode::Group: return "group";
+    case ml::AddressMode::Broadcast: return "broadcast";
+  }
+  return "unknown";
+}
+
 static void dispatchCommand(String cmd) {
   cmd.trim();
   if (cmd == "help") {
@@ -179,13 +211,29 @@ void loop() {
       radioLink.transmit(forwarded);
     }
     const ml::RadioStatus rs = radioLink.status();
-    String event = "{\"type\":\"mesh\",\"action\":";
+    String event = "{\\"type\\":\\"mesh\\",\\"action\\":";
     event += String(static_cast<uint8_t>(action));
-    event += ",\"source\":\"";
+    event += ",\\"actionName\\":\\"";
+    event += meshActionName(action);
+    event += "\\",\\"packetType\\":\\"";
+    event += packetTypeName(incoming.type);
+    event += "\\",\\"addressMode\\":\\"";
+    event += addressModeName(incoming.mode);
+    event += "\\",\\"source\\":\\"";
     event += ml::hexId(incoming.source, sizeof(incoming.source)).c_str();
-    event += "\",\"rssi\":";
+    event += "\\",\\"destination\\":\\"";
+    event += ml::hexId(incoming.destination, sizeof(incoming.destination)).c_str();
+    event += "\\",\\"messageId\\":\\"";
+    event += ml::hexId(incoming.messageId, sizeof(incoming.messageId)).c_str();
+    event += "\\",\\"hopCount\\":";
+    event += String(incoming.hopCount);
+    event += ",\\"hopLimit\\":";
+    event += String(incoming.hopLimit);
+    event += ",\\"payloadBytes\\":";
+    event += String(incoming.payload.size());
+    event += ",\\"rssi\\":";
     event += String(rs.lastRssi);
-    event += ",\"snr\":";
+    event += ",\\"snr\\":";
     event += String(rs.lastSnr);
     event += "}";
     report(event);

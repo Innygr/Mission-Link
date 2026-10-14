@@ -1,0 +1,30 @@
+name: MissionLink Apple CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apple/**"
+      - ".github/workflows/apple-ci.yml"
+  pull_request:
+    paths:
+      - "apple/**"
+      - ".github/workflows/apple-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: apple
+        run: xcodegen generate
+      - name: Build for iOS 18 simulator
+        working-directory: apple
+        run: xcodebuild -project MissionLink.xcodeproj -scheme MissionLink -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=18.0 build

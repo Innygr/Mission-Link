@@ -13,6 +13,15 @@
 - **Not validated / limits:** QEMU's ESP32-S3 ROM can't do UART download (it panics on sync; Python esptool fails too), so runs (a)/(b) used the emulated **classic ESP32** with the S3 chip checks relaxed for that test only. Not tested: real XIAO hardware, USB-JTAG reset/re-enumeration, the real Web Serial implementation, booting the flashed app, and anything RF.
 - **Next:** maintainer: flash a spare XIAO from the deployed page and share the log plus serial output after RESET. ChatGPT: review the connect change in `web/flasher.js`. Optionally, a manifest with version/commit/SHA-256 for `web/firmware/` would let the page show which build it installs and detect a mixed deploy.
 
+### 2026-10-14 — Enable receive-only Wio-SX1262 radio path
+- **Owner:** ChatGPT, requested by maintainer.
+- **Status:** configuration committed; ESP32-S3 CI build and native tests running.
+- **Commits:** [radio initialization and RF switch/TCXO setup](https://github.com/Innygr/Mission-Link/commit/37146eaa7d2bf45ac490fcc94ff279a7d87c98ff), [enable receive-only board config](https://github.com/Innygr/Mission-Link/commit/6bced826e214cd04e02f7c20ac73aba15e9a498c).
+- **Changed paths:** `src/missionlink_radio.cpp`, `platformio.ini`.
+- **Implemented:** enables the Wio-SX1262 adapter's verified-config branch and continuous receive mode for the XIAO ESP32-S3 B2B kit; configures the GPIO 38 RF switch, SPI pins, SX1262 TCXO voltage (1.6 V), and initial 915 MHz / 125 kHz / SF9 / CR 4/7 receive parameters.
+- **Transmit safety:** `ML_RF_ENABLED` remains `0`; `transmit()` remains blocked. The TX-power setting is only a RadioLib initialization parameter and does not enable transmission. No over-the-air test has been performed; received packets and real RF operation remain unverified. Confirm the exact kit revision, antenna connection, matching settings on both nodes, and Canadian compliance before enabling TX.
+- **Validation:** GitHub Actions run [#38629762715](https://github.com/Innygr/Mission-Link/actions/runs/38629762715) was in progress at handoff. No physical hardware test performed.
+
 
 ### 2026-10-14 — Validate the exact build before flashing/publishing
 - **Owner:** ChatGPT

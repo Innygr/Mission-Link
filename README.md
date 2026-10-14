@@ -18,7 +18,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Binary packet format:** `docs/PACKET_FORMAT.md` (protocol v1 codec layout and validation rules).
 - **Radio bring-up checklist:** `docs/RADIO_BRINGUP.md` (staged hardware validation; RF remains disabled).
 - **Bench testing guide:** `docs/TESTING_GUIDE.md` — step-by-step native tests, compile, USB serial, BLE, expected responses, and a test-report template.
-- **Mesh routing module:** `src/mesh_router.cpp` and `include/mesh_router.h` (RF-independent routing policy and native simulation tests; not connected to the radio).
+- **Radio adapter:** `src/missionlink_radio.cpp` and `include/missionlink_radio.h` (feature-gated SX1262/RadioLib adapter for receive, decode, RSSI/SNR, and encoded-frame transmit; pin map and RF remain disabled until verified).\n- **Mesh routing module:** `src/mesh_router.cpp` and `include/mesh_router.h` (RF-independent routing policy and native simulation tests; radio-to-router integration remains pending).
 - **Node presets:** `docs/NODE_PRESETS.md` — Client, Repeater, and Gateway roles.
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is defined in GitHub Actions; physical-device BLE behavior still needs testing.
@@ -32,7 +32,7 @@ A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The late
 - Direct node addressing and group/channel addressing in the packet model
 - Versioned packet codec with bounded fields
 - Relay-ready packet metadata (hop limit, hop count, message ID)
-- RF-independent mesh forwarding policy with duplicate suppression, bounded hop counts, and forwarding rate limits (simulator only)
+- Feature-gated SX1262 radio adapter interface with receive/decode path and a compile-time RF transmit guard (hardware pin map unverified; disabled by default)\n- RF-independent mesh forwarding policy with duplicate suppression, bounded hop counts, and forwarding rate limits (simulator only)
 - Client / Repeater / Gateway routing presets (volatile selection; radio integration pending)
 - PlatformIO host-independent protocol tests, including malformed-frame rejection
 - JSON Lines status/help/error events shared by USB serial and BLE

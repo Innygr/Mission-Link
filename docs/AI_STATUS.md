@@ -1,3 +1,13 @@
+
+### 2026-10-14 — Flasher initialization/cache fixes and radio state recovery
+- **Owner:** ChatGPT
+- **Status:** committed; CI running
+- **Commits:** [load defaults at page startup](https://github.com/Innygr/Mission-Link/commit/0a4d12ba0b74e45904cfd74ded31afa8a8f1d20f), [bypass service-worker cache for firmware binaries](https://github.com/Innygr/Mission-Link/commit/8a61da6fd2240d2770bfa97bce6776dabef3eda6), [radio receive-state recovery](https://github.com/Innygr/Mission-Link/commit/d5c42fcf591d620c085e78201d2e55af5a9f846b)
+- **Changed paths:** `web/flasher.js`, `web/sw.js`, `src/missionlink_radio.cpp`
+- **Implemented:** official firmware loading now starts during flasher page initialization rather than waiting for Connect; service worker no longer intercepts/caches `/firmware/` requests, which continue to use `cache: "no-store"`; radio adapter updates `receiving_` based on actual receive restart results and reports receive errors rather than claiming RX is active after a failed restart. `beginReceive()` now initializes the radio for an explicitly configured TX-only build without entering receive mode; the repository defaults still keep RF disabled.
+- **Validation:** inspected current source and checked the expected call paths; GitHub Actions runs are in progress. No physical USB flash or radio test performed. The default firmware build does not compile the pinmap-verified RadioLib branch, so that guarded branch still needs a dedicated compile check before any future activation.
+- **Next:** confirm CI/deploy, verify the deployed firmware URLs, and add a safe compile-only validation path for the guarded radio adapter without enabling RF.
+
 # MissionLink AI Work Status
 
 > Update this file when task ownership, progress, test results, or blockers materially change. This is a snapshot, not a live agent connection. Check the latest commits, branches, issues, and PRs before relying on it.

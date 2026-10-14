@@ -1,6 +1,6 @@
 import unittest
 
-from missionlink_services import (
+from host.missionlink_services import (
     DEFAULT_MESH_INLINE_MAX,
     RegistryError,
     ServiceRecord,

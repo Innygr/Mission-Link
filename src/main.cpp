@@ -34,13 +34,13 @@ static void reportError(const char* code, const char* message) {
 static void dispatchCommand(String cmd) {
   cmd.trim();
   if (cmd == "help") {
-    report("{\"type\":\"help\",\"commands\":[\"help\",\"status\",\"nodes\",\"send <node-id> <text>\",\"group <channel-id> <text>\",\"join <channel-id>\",\"leave <channel-id>\"]}");
-  } else if (cmd == "status") {
+    report("{\"type\":\"help\",\"commands\":[\"help\",\"status\",\"nodes\",\"presets\",\"preset <client|repeater|gateway>\",\"send <node-id> <text>\",\"group <channel-id> <text>\",\"join <channel-id>\",\"leave <channel-id>\"]}");
+  } else if (cmd == "presets") {\n    report("{\\\"type\\\":\\\"presets\\\",\\\"items\\\":[{\\\"id\\\":\\\"client\\\",\\\"description\\\":\\\"End device; never relays packets.\\\"},{\\\"id\\\":\\\"repeater\\\",\\\"description\\\":\\\"Relays traffic without presenting group traffic locally.\\\"},{\\\"id\\\":\\\"gateway\\\",\\\"description\\\":\\\"Relays traffic and delivers group traffic locally.\\\"}]}");\n  } else if (cmd.startsWith("preset ")) {\n    String requested = cmd.substring(7); requested.trim(); ml::NodePreset parsed;\n    if (!ml::parsePreset(requested.c_str(), parsed)) { reportError("invalid_preset", "Use preset client, preset repeater, or preset gateway."); return; }\n    activePreset = parsed; String out = "{\\\"type\\\":\\\"preset\\\",\\\"active\\\":\\\""; out += ml::presetName(activePreset); out += "\\\"}"; report(out);\n  } else if (cmd == "status") {
     String out = "{\"type\":\"status\",\"firmware\":\"0.2.1\",\"protocolVersion\":";
     out += String(ML_PROTOCOL_VERSION);
     out += ",\"rfEnabled\":";
     out += ML_RF_ENABLED ? "true" : "false";
-    out += ",\"bleReady\":true,\"serialReady\":true,\"radioReady\":false}";
+    out += ",\"bleReady\":true,\"serialReady\":true,\"radioReady\":false,\"preset\":\""; out += ml::presetName(activePreset); out += "\"}";
     report(out);
   } else if (cmd == "nodes") {
     report("{\"type\":\"nodes\",\"items\":[],\"ready\":false,\"reason\":\"discovery_not_implemented\"}");

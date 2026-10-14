@@ -17,9 +17,9 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is now defined in GitHub Actions; physical-device BLE behavior still needs testing.
 
-A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. **One-time setup is required:** open [Settings → Pages](https://github.com/Innygr/Mission-Link/settings/pages), set **Build and deployment → Source** to **GitHub Actions**, save, then rerun the failed deployment. The build/upload job already passes; the deploy job cannot create a site until this repository setting is enabled.
+A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The latest logo integration deployment succeeded; the live site may take a short time to refresh, and installed PWAs may need a reload to refresh cached assets.
 
-## Firmware scaffold (0.2.0)
+## Firmware scaffold (0.2.1)
 
 - USB serial command interface
 - BLE GATT command interface (ESP32-S3)
@@ -27,7 +27,7 @@ A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. **One-ti
 - Versioned packet codec with bounded fields
 - Relay-ready packet metadata (hop limit, hop count, message ID)
 - PlatformIO host-independent protocol tests
-- JSON Lines status/help/error events shared by USB serial and BLE
+- JSON Lines status/help/error events shared by USB serial and BLE\n- Bounded command input: oversized USB lines are discarded whole, and oversized BLE writes are rejected
 - GitHub Actions workflows for web validation, packet tests, ESP32 compile, and iOS simulator compile
 
 ## Build

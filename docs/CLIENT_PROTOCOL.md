@@ -60,6 +60,8 @@ Error response:
 {"type":"error","code":"not_ready","message":"Direct messaging is unavailable until radio and encryption are implemented."}
 ```
 
+Mesh routing events (emitted only if the radio adapter actually returns a decoded packet) include a stable human-readable `actionName` alongside the numeric `action` for compatibility, plus `packetType`, `addressMode`, `source`, `destination`, `messageId`, `hopCount`, `hopLimit`, `payloadBytes`, `rssi`, and `snr`. IDs are lowercase hexadecimal. Action names are `drop_invalid`, `drop_duplicate`, `deliver_local`, `deliver_and_forward`, and `forward_only`. These are routing/diagnostic metadata only: this event does not expose message plaintext or mean that encrypted application delivery, authentication, or reliable delivery is implemented.
+
 Boot and BLE events report firmware startup/advertising. Clients should tolerate unknown event types and optional fields for forward compatibility. BLE notification delivery is best-effort; clients should not treat a command write as proof that a response was received.
 
 ## BLE identifiers

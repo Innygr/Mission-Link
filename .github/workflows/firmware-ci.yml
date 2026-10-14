@@ -16,6 +16,8 @@ on:
       - "src/**"
       - "include/**"
       - "test/**"
+      - "web/flasher-validate.js"
+      - "web/tests/**"
       - "platformio.ini"
       - ".github/workflows/firmware-ci.yml"
   workflow_dispatch:

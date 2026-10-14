@@ -10,6 +10,25 @@ static ml::Packet makePacket(ml::AddressMode mode=ml::AddressMode::Direct){
 }
 void test_preset_names_and_parser(){ ml::NodePreset p; TEST_ASSERT_TRUE(ml::parsePreset("client",p)); TEST_ASSERT_EQUAL((int)ml::NodePreset::Client,(int)p); TEST_ASSERT_TRUE(ml::parsePreset("repeater",p)); TEST_ASSERT_EQUAL((int)ml::NodePreset::Repeater,(int)p); TEST_ASSERT_TRUE(ml::parsePreset("gateway",p)); TEST_ASSERT_EQUAL((int)ml::NodePreset::Gateway,(int)p); TEST_ASSERT_FALSE(ml::parsePreset("other",p)); }
 void test_client_does_not_relay_unicast(){ ml::MeshRouter r(ml::NodePreset::Client); auto p=makePacket(); ml::Packet f; TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,10,f)); }
+void test_mesh_direct_addressed_to_local_delivers(){
+ ml::MeshRouter r; auto p=makePacket(); ml::Packet f;
+ TEST_ASSERT_EQUAL((int)ml::MeshAction::DeliverLocal,(int)r.process(p,C,10,f));
+}
+void test_mesh_per_source_rate_limit(){
+ ml::MeshRouter r(ml::NodePreset::Repeater); ml::Packet f;
+ for(uint8_t i=1;i<=ml::MeshRouter::MAX_FORWARDS_PER_SOURCE_WINDOW;++i){
+  auto p=makePacket(); p.messageId[7]=i;
+  TEST_ASSERT_EQUAL((int)ml::MeshAction::ForwardOnly,(int)r.process(p,B,100,f));
+ }
+ auto p=makePacket(); p.messageId[7]=99;
+ TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,100,f));
+ p.messageId[7]=100;
+ TEST_ASSERT_EQUAL((int)ml::MeshAction::ForwardOnly,(int)r.process(p,B,1100,f));
+}
+void test_mesh_rejects_packet_from_local_source(){
+ ml::MeshRouter r; auto p=makePacket(); ml::Packet f;
+ TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,A,10,f));
+}
 void test_repeater_forwards_group_without_local_delivery(){ ml::MeshRouter r(ml::NodePreset::Repeater); auto p=makePacket(ml::AddressMode::Broadcast); ml::Packet f; TEST_ASSERT_EQUAL((int)ml::MeshAction::ForwardOnly,(int)r.process(p,B,10,f)); TEST_ASSERT_EQUAL_UINT8(1,f.hopCount); }
 void test_gateway_delivers_and_forwards_group(){ ml::MeshRouter r(ml::NodePreset::Gateway); auto p=makePacket(ml::AddressMode::Broadcast); ml::Packet f; TEST_ASSERT_EQUAL((int)ml::MeshAction::DeliverAndForward,(int)r.process(p,B,10,f)); }
 void test_mesh_three_node_forwarding_increments_once(){ ml::MeshRouter r(ml::NodePreset::Repeater); auto p=makePacket(); ml::Packet f;
@@ -54,7 +73,7 @@ void test_decode_rejects_payload_length_mismatch(){ml::Packet p;p.payload={'o','
 void test_decode_rejects_trailing_bytes(){ml::Packet p;std::vector<uint8_t>b;TEST_ASSERT_TRUE(ml::encode(p,b));b.push_back(0);ml::Packet q;TEST_ASSERT_FALSE(ml::decode(b.data(),b.size(),q));}
 void test_hex_id_null_is_safe(){TEST_ASSERT_EQUAL_STRING("",ml::hexId(nullptr,8).c_str());}
 int main(int argc,char**argv){UNITY_BEGIN();
- RUN_TEST(test_preset_names_and_parser); RUN_TEST(test_client_does_not_relay_unicast); RUN_TEST(test_repeater_forwards_group_without_local_delivery); RUN_TEST(test_gateway_delivers_and_forwards_group); RUN_TEST(test_mesh_three_node_forwarding_increments_once);RUN_TEST(test_mesh_duplicate_suppressed);RUN_TEST(test_mesh_hop_budget_stops_forwarding);
+ RUN_TEST(test_preset_names_and_parser); RUN_TEST(test_client_does_not_relay_unicast); RUN_TEST(test_mesh_direct_addressed_to_local_delivers); RUN_TEST(test_mesh_per_source_rate_limit); RUN_TEST(test_mesh_rejects_packet_from_local_source); RUN_TEST(test_repeater_forwards_group_without_local_delivery); RUN_TEST(test_gateway_delivers_and_forwards_group); RUN_TEST(test_mesh_three_node_forwarding_increments_once);RUN_TEST(test_mesh_duplicate_suppressed);RUN_TEST(test_mesh_hop_budget_stops_forwarding);
  RUN_TEST(test_mesh_broadcast_delivers_at_hop_limit);RUN_TEST(test_mesh_rejects_zero_source_and_message_id);RUN_TEST(test_mesh_global_rate_limit);RUN_TEST(test_mesh_duplicate_cache_expires);
  RUN_TEST(test_round_trip);RUN_TEST(test_reject_truncated);RUN_TEST(test_reject_null_input);RUN_TEST(test_reject_invalid_hops);RUN_TEST(test_reject_invalid_type_on_encode);
  RUN_TEST(test_reject_invalid_mode_on_encode);RUN_TEST(test_reject_oversized_payload);RUN_TEST(test_encode_failure_clears_stale_output);RUN_TEST(test_max_payload_round_trip);

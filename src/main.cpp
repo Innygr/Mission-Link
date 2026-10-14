@@ -6,8 +6,10 @@ static const char* BLE_NAME = "MissionLink";
 static const char* SERVICE_UUID = "3f4a0001-7c2e-4a5b-9d11-5b7d6e100001";
 static const char* RX_UUID = "3f4a0002-7c2e-4a5b-9d11-5b7d6e100001";
 static const char* TX_UUID = "3f4a0003-7c2e-4a5b-9d11-5b7d6e100001";
+static constexpr size_t MAX_COMMAND_BYTES = 256;
 static NimBLECharacteristic* txChar = nullptr;
 static String commandBuffer;
+static bool discardUntilNewline = false;
 
 static void report(const String& jsonLine) {
   Serial.println(jsonLine);
@@ -32,7 +34,7 @@ static void dispatchCommand(String cmd) {
   if (cmd == "help") {
     report("{\"type\":\"help\",\"commands\":[\"help\",\"status\",\"nodes\",\"send <node-id> <text>\",\"group <channel-id> <text>\",\"join <channel-id>\",\"leave <channel-id>\"]}");
   } else if (cmd == "status") {
-    String out = "{\"type\":\"status\",\"firmware\":\"0.2.0\",\"protocolVersion\":";
+    String out = "{\"type\":\"status\",\"firmware\":\"0.2.1\",\"protocolVersion\":";
     out += String(ML_PROTOCOL_VERSION);
     out += ",\"rfEnabled\":";
     out += ML_RF_ENABLED ? "true" : "false";
@@ -58,15 +60,21 @@ static void dispatchCommand(String cmd) {
 class RxCallbacks : public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic* characteristic, NimBLEConnInfo& info) override {
     std::string value = characteristic->getValue();
-    if (!value.empty()) dispatchCommand(String(value.c_str()));
+    if (value.empty()) return;
+    if (value.size() > MAX_COMMAND_BYTES) {
+      reportError("command_too_long", "Commands must be 256 bytes or fewer.");
+      return;
+    }
+    dispatchCommand(String(value.c_str()));
   }
 };
 
 void setup() {
   Serial.begin(115200);
   delay(300);
+  commandBuffer.reserve(MAX_COMMAND_BYTES);
   Serial.println();
-  Serial.println("{\"type\":\"boot\",\"firmware\":\"0.2.0\",\"rfEnabled\":false}");
+  Serial.println("{\"type\":\"boot\",\"firmware\":\"0.2.1\",\"rfEnabled\":false}");
   Serial.println("{\"type\":\"hint\",\"message\":\"Send help for commands. RF is deliberately disabled.\"}");
 
   NimBLEDevice::init(BLE_NAME);
@@ -77,7 +85,7 @@ void setup() {
   txChar = service->createCharacteristic(
       TX_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);
   rx->setCallbacks(new RxCallbacks());
-  txChar->setValue("{\"type\":\"ready\",\"firmware\":\"0.2.0\",\"rfEnabled\":false}");
+  txChar->setValue("{\"type\":\"ready\",\"firmware\":\"0.2.1\",\"rfEnabled\":false}");
   NimBLEDevice::getAdvertising()->addServiceUUID(SERVICE_UUID);
   NimBLEDevice::getAdvertising()->start();
   Serial.println("{\"type\":\"ble\",\"advertising\":true}");
@@ -87,12 +95,22 @@ void loop() {
   while (Serial.available()) {
     char ch = static_cast<char>(Serial.read());
     if (ch == '\n' || ch == '\r') {
-      if (commandBuffer.length()) {
+      if (discardUntilNewline) {
+        discardUntilNewline = false;
+        commandBuffer = "";
+        reportError("command_too_long", "Commands must be 256 bytes or fewer.");
+      } else if (commandBuffer.length()) {
         dispatchCommand(commandBuffer);
         commandBuffer = "";
       }
-    } else if (commandBuffer.length() < 256) {
-      commandBuffer += ch;
+    } else if (!discardUntilNewline) {
+      if (commandBuffer.length() < MAX_COMMAND_BYTES) {
+        commandBuffer += ch;
+      } else {
+        // Drop the entire oversized line instead of dispatching a truncated command.
+        commandBuffer = "";
+        discardUntilNewline = true;
+      }
     }
   }
   delay(5);

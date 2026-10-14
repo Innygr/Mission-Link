@@ -60,7 +60,9 @@
       port = await navigator.serial.requestPort();
       await port.open({baudRate:115200});
       writer = port.writable.getWriter();
-      serialTextBuffer = "";\n      decoder = new TextDecoder();\n      setConnected(true);
+      serialTextBuffer = "";
+      decoder = new TextDecoder();
+      setConnected(true);
       log("USB serial opened at 115200 baud.");
       keepReading = true;
       readLoop();
@@ -97,7 +99,9 @@
     try { if (reader) await reader.cancel(); } catch {}
     try { if (writer) { writer.releaseLock(); writer = null; } } catch {}
     try { if (port) await port.close(); } catch (error) { log("Close warning: " + error.message); }
-    if (serialTextBuffer.trim()) handleFirmwareLine(serialTextBuffer.trim());\n    serialTextBuffer = "";\n    port = null; setConnected(false); log("USB serial disconnected.");
+    if (serialTextBuffer.trim()) handleFirmwareLine(serialTextBuffer.trim());
+    serialTextBuffer = "";
+    port = null; setConnected(false); log("USB serial disconnected.");
   }
   async function sendCommand() {
     const command = commandInput.value.trim();

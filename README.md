@@ -9,7 +9,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 ## Client applications
 
 - **Web/PWA:** `web/` — responsive local dashboard, installable web app manifest, offline static-asset caching, and a USB serial console in supported desktop Chromium browsers.
-- **Apple app:** `apple/MissionLink/` — SwiftUI + Core Bluetooth starter targeting iOS 18 and later. It uses the GATT UUIDs currently in `src/main.cpp`.
+- **Apple app:** `apple/MissionLink/` — SwiftUI + Core Bluetooth starter targeting iOS 16.7 and later. It uses the GATT UUIDs currently in `src/main.cpp`.
 - **Architecture notes:** `docs/CLIENT_ARCHITECTURE.md`.
 - **Security and glyph transport design:** `docs/CIPHER_SUITES.md` (design proposal; not implemented in firmware yet).
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.

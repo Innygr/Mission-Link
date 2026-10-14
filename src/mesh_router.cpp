@@ -48,8 +48,8 @@ MeshAction MeshRouter::process(const Packet& p,const uint8_t localId[8],uint32_t
  if(directHere) return MeshAction::DeliverLocal;
  const bool localBroadcast=p.mode!=AddressMode::Direct;
  if(preset_==NodePreset::Client) return localBroadcast?MeshAction::DeliverLocal:MeshAction::DropInvalid;
- if(p.hopCount>=p.hopLimit) return localBroadcast?MeshAction::DeliverLocal:MeshAction::DropInvalid;
- if(!allowForward(p,now)) return localBroadcast?MeshAction::DeliverLocal:MeshAction::DropInvalid;
+ if(p.hopCount>=p.hopLimit) return localBroadcast?(preset_==NodePreset::Gateway?MeshAction::DeliverLocal:MeshAction::ForwardOnly):MeshAction::DropInvalid;
+ if(!allowForward(p,now)) return localBroadcast?(preset_==NodePreset::Gateway?MeshAction::DeliverLocal:MeshAction::ForwardOnly):MeshAction::DropInvalid;
  forwarded=p; ++forwarded.hopCount;
  if(localBroadcast && preset_==NodePreset::Gateway) return MeshAction::DeliverAndForward;
  return MeshAction::ForwardOnly;

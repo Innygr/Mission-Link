@@ -8,7 +8,10 @@ bool allZero(const uint8_t a[8]) { uint8_t v=0; for(size_t i=0;i<8;++i) v|=a[i];
 bool validType(uint8_t t) { return t>=static_cast<uint8_t>(PacketType::Hello)&&t<=static_cast<uint8_t>(PacketType::Leave); }
 bool validMode(uint8_t m) { return m<=static_cast<uint8_t>(AddressMode::Broadcast); }
 }
-MeshRouter::MeshRouter(){ reset(); }
+const char* presetName(NodePreset p) { switch(p) { case NodePreset::Client:return "client"; case NodePreset::Repeater:return "repeater"; case NodePreset::Gateway:return "gateway"; } return "client"; }
+bool parsePreset(const char* n, NodePreset& out) { if(!n)return false; if(!strcmp(n,"client")){out=NodePreset::Client;return true;} if(!strcmp(n,"repeater")){out=NodePreset::Repeater;return true;} if(!strcmp(n,"gateway")){out=NodePreset::Gateway;return true;} return false; }
+MeshRouter::MeshRouter(NodePreset p):preset_(p){ reset(); }
+void MeshRouter::setPreset(NodePreset p){ preset_=p; reset(); }
 void MeshRouter::reset(){
  memset(seen_,0,sizeof(seen_)); memset(sources_,0,sizeof(sources_));
  nextSeen_=nextSource_=0; globalWindowStart_=0; globalForwards_=0; globalWindowValid_=false;
@@ -44,9 +47,11 @@ MeshAction MeshRouter::process(const Packet& p,const uint8_t localId[8],uint32_t
  const bool directHere=p.mode==AddressMode::Direct && same8(p.destination,localId);
  if(directHere) return MeshAction::DeliverLocal;
  const bool localBroadcast=p.mode!=AddressMode::Direct;
+ if(preset_==NodePreset::Client) return localBroadcast?MeshAction::DeliverLocal:MeshAction::DropInvalid;
  if(p.hopCount>=p.hopLimit) return localBroadcast?MeshAction::DeliverLocal:MeshAction::DropInvalid;
  if(!allowForward(p,now)) return localBroadcast?MeshAction::DeliverLocal:MeshAction::DropInvalid;
  forwarded=p; ++forwarded.hopCount;
- return localBroadcast?MeshAction::DeliverAndForward:MeshAction::ForwardOnly;
+ if(localBroadcast && preset_==NodePreset::Gateway) return MeshAction::DeliverAndForward;
+ return MeshAction::ForwardOnly;
 }
 }

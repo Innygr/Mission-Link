@@ -30,10 +30,10 @@ Preset selection is held in RAM only and resets to Client on reboot. It changes 
 
 ## Events
 
-Status response (firmware 0.2.1; fields may evolve):
+Status response (firmware 0.2.1; fields may evolve). `radioReady` is true only when the adapter is initialized and reports `ready`; `radioState` gives the adapter state. With the default unverified pin map and disabled RF, expect `pinmap_unverified` and `radioReady:false`:
 
 ```json
-{"type":"status","firmware":"0.2.1","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false,"preset":"client"}
+{"type":"status","firmware":"0.2.1","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false,"radioInitialized":false,"radioReceiving":false,"radioState":"pinmap_unverified","preset":"client"}
 ```
 
 Preset list response:

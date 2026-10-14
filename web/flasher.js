@@ -1,4 +1,6 @@
-import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.js";
+import { validateFirmwareSet } from "./flasher-validate.js";
+
+const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
 
 (() => {
   "use strict";
@@ -6,7 +8,7 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.
   const connectButton = $("connect"), disconnectButton = $("disconnect"), flashButton = $("flash");
   const logBox = $("flasher-log"), statusBox = $("device-status");
   const fileIds = ["bootloader", "partitions", "bootapp", "application"];
-  let port = null, transport = null, loader = null, connected = false, busy = false, chipName = "";
+  let ESPLoader = null, Transport = null, port = null, transport = null, loader = null, connected = false, busy = false, chipName = "";
 
   function log(message) {
     const time = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
@@ -46,6 +48,10 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.
       return;
     }
     try {
+      if (!ESPLoader) {
+        // Loaded on demand so a blocked CDN shows an error instead of leaving the page inert.
+        ({ ESPLoader, Transport } = await import(ESPTOOL_URL));
+      }
       port = await navigator.serial.requestPort();
       transport = new Transport(port);
       loader = new ESPLoader({ transport, baudrate: 460800, terminal: terminal() });
@@ -78,6 +84,11 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.
     }
     return result;
   }
+  async function sha256(bytes) {
+    if (!globalThis.crypto?.subtle) return "unavailable";
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+    return Array.from(digest, b => b.toString(16).padStart(2, "0")).join("");
+  }
   async function readFile(id, address) {
     const file = $(id).files?.[0];
     if (!file) return null;
@@ -85,7 +96,7 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.
     const bytes = new Uint8Array(await file.arrayBuffer());
     if (!bytes.length) throw new Error(file.name + " is empty.");
     log("Loaded " + file.name + " (" + bytes.length.toLocaleString() + " bytes) → 0x" + address.toString(16).toUpperCase());
-    return { data: toBinaryString(bytes), address };
+    return { data: toBinaryString(bytes), address, bytes, name: file.name };
   }
   async function flash() {
     if (!connected || busy) return;
@@ -107,8 +118,29 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.
       if (bootapp) files.push(bootapp);
       if (application) files.push(application);
       if (files.length < 3) throw new Error("Required firmware files are missing.");
-      if (!confirm("Flash " + chipName + " with " + files.length + " binary files? This will overwrite firmware. Continue only if these files were built for your exact board.")) {
+      const check = validateFirmwareSet({
+        bootloader: bootloader?.bytes, partitions: partitions?.bytes, bootapp: bootapp?.bytes, application: application?.bytes
+      }, chipName);
+      for (const w of check.warnings) log("Note: " + w);
+      if (check.errors.length) {
+        check.errors.forEach(e => log("Pre-flash check failed: " + e));
+        throw new Error("Pre-flash checks failed; nothing was written. " + check.errors[0]);
+      }
+      log("Pre-flash header checks passed (image magic, ESP32-S3 chip ID, slot sizes, app partition). These do not prove the build is correct for your board.");
+      const summary = [];
+      for (const f of files) {
+        const hash = await sha256(f.bytes);
+        log("SHA-256 " + f.name + ": " + hash);
+        summary.push("0x" + f.address.toString(16).toUpperCase() + "  " + f.name + "  (" + f.bytes.length.toLocaleString() + " bytes)");
+      }
+      const eraseAll = $("erase-all").checked;
+      if (!confirm("Flash " + chipName + " with " + files.length + " binary files?\n\n" + summary.join("\n") + "\n\nThis will overwrite firmware. Continue only if these files were built for your exact board.")) {
         log("Flash cancelled before writing.");
+        setResult("Cancelled. No files were written.");
+        return;
+      }
+      if (eraseAll && !confirm("ERASE ALL FLASH first? This permanently removes existing settings and stored data on the board.")) {
+        log("Flash cancelled at erase confirmation.");
         setResult("Cancelled. No files were written.");
         return;
       }
@@ -117,7 +149,7 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.
       await loader.writeFlash({
         fileArray: files,
         flashSize: "keep",
-        eraseAll: $("erase-all").checked,
+        eraseAll,
         compress: true,
         reportProgress(fileIndex, written, total) {
           const percent = total > 0 ? Math.min(100, Math.round((written / total) * 100)) : 0;
@@ -149,6 +181,11 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.6/bundle.
       updateFlashButton();
     });
   }
+  navigator.serial?.addEventListener("disconnect", () => {
+    if (!connected) return;
+    log(busy ? "USB device disappeared during flashing. The board may be left with incomplete firmware; reconnect, hold BOOT, and flash again." : "USB device was unplugged.");
+    if (!busy) { transport = null; loader = null; port = null; chipName = ""; setConnected(false); setResult("Device unplugged."); }
+  });
   connectButton.addEventListener("click", connect);
   disconnectButton.addEventListener("click", disconnect);
   flashButton.addEventListener("click", flash);

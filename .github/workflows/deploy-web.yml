@@ -1,0 +1,45 @@
+name: Deploy MissionLink Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/deploy-web.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate required web app files
+        run: |
+          test -s web/index.html
+          test -s web/styles.css
+          test -s web/app.js
+          test -s web/manifest.webmanifest
+          test -s web/sw.js
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

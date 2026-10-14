@@ -43,6 +43,46 @@ class ServiceRegistryTests(unittest.TestCase):
         with self.assertRaises(RegistryError):
             service(endpoint="http://192.168.1.20:8000").validate()
 
+    def test_endpoint_parser_rejects_lookalikes_and_bad_ports(self):
+        for endpoint in (
+            "http://localhost.evil:8000",
+            "http://127.0.0.1.evil:8000",
+            "http://localhost:99999",
+            "http://localhost:notaport",
+            "https:///missing-host",
+            "ftp://example.com/file",
+        ):
+            with self.subTest(endpoint=endpoint), self.assertRaises(RegistryError):
+                service(endpoint=endpoint).validate()
+
+    def test_loopback_http_and_remote_https_are_allowed(self):
+        for endpoint in (
+            "http://localhost:8000/api",
+            "http://127.0.0.1:8000",
+            "http://[::1]:8000",
+            "https://nas.example.invalid/missionlink",
+        ):
+            with self.subTest(endpoint=endpoint):
+                service(endpoint=endpoint).validate()
+
+    def test_runtime_types_are_checked(self):
+        for record in (
+            service(service_id=None),
+            service(host_id=12),
+            service(display_name=" "),
+            service(capabilities=("file.read", 3)),
+            service(transports=("lan", "lan")),
+            service(max_inline_request_bytes=True),
+            service(healthy="yes"),
+            service(endpoint=42),
+        ):
+            with self.subTest(record=record), self.assertRaises(RegistryError):
+                record.validate()
+        with self.assertRaises(RegistryError):
+            ServiceRegistry().register(object())
+        with self.assertRaises(ValueError):
+            ServiceRegistry(max_services=True)
+
     def test_bounds_and_duplicate_capabilities(self):
         with self.assertRaises(RegistryError):
             service(capabilities=("file.read", "file.read")).validate()
@@ -68,6 +108,7 @@ class ServiceRegistryTests(unittest.TestCase):
         self.assertFalse(mesh_inline_allowed(181, item))
         self.assertFalse(mesh_inline_allowed(True, item))
         self.assertFalse(mesh_inline_allowed(-1, item))
+        self.assertFalse(mesh_inline_allowed(4, object()))
 
 
 if __name__ == "__main__":

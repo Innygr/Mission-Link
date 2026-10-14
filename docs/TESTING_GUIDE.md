@@ -52,7 +52,7 @@ After boot, expect JSON Lines boot/hint/BLE-advertising events. Send each comman
 | Input | Expected result |
 |---|---|
 | `help` | Help event listing supported commands, presets, and placeholders |
-| `status` | Status event; `rfEnabled:false`, `radioReady:false`, preset initially `client` |
+| `status` | Status event; `rfEnabled:false`, `radioReady:false`, `radioInitialized:false`, `radioState:pinmap_unverified`, preset initially `client` |
 | `presets` | Three presets: client, repeater, gateway |
 | `preset repeater` | Preset event with `active:repeater` |
 | `status` | Status event reports `preset:repeater` |
@@ -64,7 +64,7 @@ After boot, expect JSON Lines boot/hint/BLE-advertising events. Send each comman
 | `group demo hello` | `not_ready` error; no message is transmitted |
 
 Also check:
-- [ ] Status continues to report `rfEnabled:false` and `radioReady:false` for every preset.
+- [ ] Status continues to report `rfEnabled:false` and `radioReady:false` for every preset; the default radio state is `pinmap_unverified` and `radioInitialized:false`.
 - [ ] Reboot resets the preset to Client (selection is intentionally volatile).
 - [ ] A USB line longer than 256 bytes is discarded whole and reports `command_too_long`; its truncated prefix must not run as a command.
 - [ ] Save the complete boot log and command/response transcript.

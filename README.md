@@ -15,6 +15,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.
 - **Binary packet format:** `docs/PACKET_FORMAT.md` (protocol v1 codec layout and validation rules).
 - **Radio bring-up checklist:** `docs/RADIO_BRINGUP.md` (staged hardware validation; RF remains disabled).
+- **Bench testing guide:** `docs/TESTING_GUIDE.md` — step-by-step native tests, compile, USB serial, BLE, expected responses, and a test-report template.
 - **Mesh routing module:** `src/mesh_router.cpp` and `include/mesh_router.h` (RF-independent routing policy and native simulation tests; not connected to the radio).
 - **Node presets:** `docs/NODE_PRESETS.md` — Client, Repeater, and Gateway roles.
 
@@ -41,23 +42,27 @@ A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The late
 Install PlatformIO Core, then from the repository root:
 
 ```sh
-pio run
 pio test -e native
+pio run -e xiao_esp32s3
 ```
 
 The `esp32-s3-devkitc-1` target is a starting compile target only; it does not guarantee that the XIAO/Wio board wiring is configured correctly. CI runs native packet-codec and mesh-policy tests and compiles the ESP32-S3 scaffold; the exact hardware configuration and RF operation still require bench testing.
 
-## Serial/BLE commands (planned MVP)
+## Serial/BLE commands
 
 - `help`
 - `status`
 - `nodes`
-- `send <node-id> <text>`
-- `group <channel-id> <text>`
-- `join <channel-id>`
-- `leave <channel-id>`
+- `presets`
+- `preset client`
+- `preset repeater`
+- `preset gateway`
+- `send <node-id> <text>` (placeholder; returns `not_ready`)
+- `group <channel-id> <text>` (placeholder; returns `not_ready`)
+- `join <channel-id>` (placeholder; returns `not_ready`)
+- `leave <channel-id>` (placeholder; returns `not_ready`)
 
-Commands are parsed through one common dispatcher so USB serial and BLE share behavior. Responses use JSON Lines on serial and one JSON event per BLE notification. Node discovery, group membership, and message delivery remain placeholders; see `docs/CLIENT_PROTOCOL.md`.
+Commands are parsed through one common dispatcher so USB serial and BLE share behavior. Responses use JSON Lines on serial and one JSON event per BLE notification. Node discovery, group membership, and message delivery remain placeholders; see `docs/CLIENT_PROTOCOL.md`. Preset selection is volatile and resets to Client on reboot. Presets do not turn on the radio or cause real over-the-air relaying.
 
 ## Encryption and identity status
 
@@ -66,8 +71,6 @@ Production encryption/key provisioning is not implemented yet. The planned ciphe
 ## Network model
 
 - **Implementation order:** mesh routing first, then direct P2P optimisation. See [mesh-first routing plan](docs/MESH_FIRST_ROUTING.md), [mesh routing test plan](docs/MESH_ROUTING_TEST_PLAN.md), and [mesh simulator implementation notes](docs/MESH_ROUTER_SIMULATOR.md).
-
 - **Direct node connection:** unicast to one node ID.
 - **Group channel:** group ID in the packet; group members decrypt with that group's key.
 - **Relay:** relays forward ciphertext based on routing metadata, without group keys.
-- **Private direct message:** use a per-peer/session key, not the group key.

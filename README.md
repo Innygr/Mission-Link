@@ -13,9 +13,9 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Architecture notes:** `docs/CLIENT_ARCHITECTURE.md`.
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.
 
-Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter and must be opened in Xcode, built, and tested on a physical device; no build/device validation has been performed yet.
+Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is now defined in GitHub Actions; physical-device BLE behavior still needs testing.
 
-A GitHub Actions workflow is included to deploy `web/` to GitHub Pages. In the repository settings, set Pages' build/deployment source to **GitHub Actions** before expecting a published site.
+A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. **One-time setup is required:** open [Settings → Pages](https://github.com/Innygr/Mission-Link/settings/pages), set **Build and deployment → Source** to **GitHub Actions**, save, then rerun the failed deployment. The build/upload job already passes; the deploy job cannot create a site until this repository setting is enabled.
 
 ## Firmware scaffold (0.2.0)
 
@@ -25,6 +25,8 @@ A GitHub Actions workflow is included to deploy `web/` to GitHub Pages. In the r
 - Versioned packet codec with bounded fields
 - Relay-ready packet metadata (hop limit, hop count, message ID)
 - PlatformIO host-independent protocol tests
+- JSON Lines status/help/error events shared by USB serial and BLE
+- GitHub Actions workflows for web validation, packet tests, ESP32 compile, and iOS simulator compile
 
 ## Build
 
@@ -35,7 +37,7 @@ pio run
 pio test -e native
 ```
 
-The `esp32-s3-devkitc-1` target is a starting compile target only; it does not guarantee that the XIAO/Wio board wiring is configured correctly. The build and tests have not yet been run in this development session.
+The `esp32-s3-devkitc-1` target is a starting compile target only; it does not guarantee that the XIAO/Wio board wiring is configured correctly. CI runs a native packet-codec test suite and compiles the ESP32-S3 scaffold; the exact hardware configuration and RF operation still require bench testing.
 
 ## Serial/BLE commands (planned MVP)
 
@@ -47,7 +49,7 @@ The `esp32-s3-devkitc-1` target is a starting compile target only; it does not g
 - `join <channel-id>`
 - `leave <channel-id>`
 
-Commands are parsed through one common dispatcher so USB serial and BLE share behavior. Node discovery, group membership, and message delivery remain placeholders.
+Commands are parsed through one common dispatcher so USB serial and BLE share behavior. Responses use JSON Lines on serial and one JSON event per BLE notification. Node discovery, group membership, and message delivery remain placeholders; see `docs/CLIENT_PROTOCOL.md`.
 
 ## Encryption and identity status
 

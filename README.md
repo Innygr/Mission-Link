@@ -11,6 +11,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Web/PWA:** `web/` — responsive local dashboard, installable web app manifest, offline static-asset caching, and a USB serial console in supported desktop Chromium browsers.
 - **Apple app:** `apple/MissionLink/` — SwiftUI + Core Bluetooth starter targeting iOS 18 and later. It uses the GATT UUIDs currently in `src/main.cpp`.
 - **Architecture notes:** `docs/CLIENT_ARCHITECTURE.md`.
+- **Cipher suites and Wingdings-style transport:** `docs/CIPHER_SUITES.md` (design proposal; not implemented yet).
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is now defined in GitHub Actions; physical-device BLE behavior still needs testing.
@@ -53,7 +54,7 @@ Commands are parsed through one common dispatcher so USB serial and BLE share be
 
 ## Encryption and identity status
 
-Production encryption/key provisioning is not implemented yet. Before M1 RF tests, implement AES-256-GCM using ESP-IDF's mbedTLS, persistent per-device identity, nonces that cannot repeat under a key, authenticated headers, replay protection, and documented key provisioning. Never commit a shared production key to source control.
+Production encryption/key provisioning is not implemented yet. The planned cipher suites and optional Wingdings-style ciphertext representation are documented in `docs/CIPHER_SUITES.md`. Before RF tests, implement authenticated encryption, persistent per-device identity, nonces that cannot repeat under a key, authenticated headers, replay protection, and documented key provisioning. Never commit a shared production key to source control.
 
 ## Network model
 

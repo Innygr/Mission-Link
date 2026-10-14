@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 #include "missionlink_config.h"
+#include "mesh_router.h"
 
 static const char* BLE_NAME = "MissionLink";
 static const char* SERVICE_UUID = "3f4a0001-7c2e-4a5b-9d11-5b7d6e100001";
@@ -10,6 +11,7 @@ static constexpr size_t MAX_COMMAND_BYTES = 256;
 static NimBLECharacteristic* txChar = nullptr;
 static String commandBuffer;
 static bool discardUntilNewline = false;
+static ml::NodePreset activePreset = ml::NodePreset::Client;
 
 static void report(const String& jsonLine) {
   Serial.println(jsonLine);

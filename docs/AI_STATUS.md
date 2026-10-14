@@ -1,4 +1,14 @@
 
+### 2026-10-14 — Validate the exact build before flashing/publishing
+- **Owner:** ChatGPT
+- **Status:** committed; GitHub Actions validation running
+- **Commits:** [built-firmware validator](https://github.com/Innygr/Mission-Link/commit/5ba84ced612e99876c384f826eea5e910160f5cf), [Pages preflight gate](https://github.com/Innygr/Mission-Link/commit/f2a78421112f8e318c7e00d98631313fa7c20a29), [firmware artifact preflight gate](https://github.com/Innygr/Mission-Link/commit/243ad40472201f8352c9adfbce251425e383cf58), [PR path filters](https://github.com/Innygr/Mission-Link/commit/05c17bae713df919916f3941a85090847c381c4f), [full packet codec round-trip assertions](https://github.com/Innygr/Mission-Link/commit/cb41b82dd9687d06e59d8b1f5e50fefb5be876f7)
+- **Changed paths:** `web/tests/validate-built-firmware.mjs`, `.github/workflows/deploy-web.yml`, `.github/workflows/firmware-ci.yml`, `test/test_packet_codec/test_packet_codec.cpp`
+- **Implemented:** the actual four files staged from PlatformIO are now passed through the same pre-flash validator used by the browser before either Pages deployment or the 14-day firmware artifact can be published. CI checks image headers/chip IDs, partition table and application slot fit—not just synthetic fixtures. Firmware CI also triggers when the shared validator or its tests change. Expanded packet codec round-trip assertions to compare every header field, all IDs, hops, and payload bytes.
+- **Validation:** prior firmware CI run [#38628397453](https://github.com/Innygr/Mission-Link/actions/runs/38628397453) passed native tests and the default ESP32-S3 build; the new real-artifact validation step is pending in newer runs. No physical flash/radio test performed.
+- **Next:** verify the new preflight step passes and Pages deploy completes; confirm all four deployed binaries are fetchable. Do not enable RF based on compile success alone.
+
+
 ### 2026-10-14 — Flasher initialization/cache fixes and radio state recovery
 - **Owner:** ChatGPT
 - **Status:** committed; CI running

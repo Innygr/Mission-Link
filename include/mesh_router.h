@@ -4,6 +4,9 @@
 #include "missionlink_packet.h"
 namespace ml {
 enum class MeshAction : uint8_t { DropInvalid, DropDuplicate, DeliverLocal, DeliverAndForward, ForwardOnly };
+enum class NodePreset : uint8_t { Client, Repeater, Gateway };
+const char* presetName(NodePreset preset);
+bool parsePreset(const char* name, NodePreset& out);
 class MeshRouter {
  public:
   static constexpr size_t DUPLICATE_CACHE_SIZE = 64;

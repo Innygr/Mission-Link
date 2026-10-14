@@ -55,6 +55,8 @@ jobs:
           test -s web/firmware/partitions.bin
           test -s web/firmware/firmware.bin
           test -s web/firmware/boot_app0.bin
+      - name: Validate staged firmware against flasher checks
+        run: node web/tests/validate-built-firmware.mjs web/firmware
       - name: Validate required web app files
         run: |
           test -s web/index.html
@@ -67,6 +69,7 @@ jobs:
           node --check web/sw.js
           node --check web/flasher.js
           node --check web/flasher-validate.js
+          node --check web/tests/validate-built-firmware.mjs
           node --test web/tests/flasher-validate.test.mjs
           python3 -m json.tool web/manifest.webmanifest > /dev/null
       - name: Upload site

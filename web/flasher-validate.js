@@ -69,3 +69,33 @@ export function validateFirmwareSet(files, chipName) {
   if (!files.bootapp) warnings.push("Boot app (boot_app0) not selected; OTA data selection will keep whatever is already on the board.");
   return { errors, warnings };
 }
+
+// MD5 of a binary string (one byte per char), hex-encoded. esptool-js uses this to verify flash contents after writing.
+export function md5BinaryString(str) {
+  const K = new Uint32Array(64), S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 2 ** 32) >>> 0;
+  const len = str.length, padded = ((len + 8) >>> 6) + 1 << 6, buf = new Uint8Array(padded);
+  for (let i = 0; i < len; i++) buf[i] = str.charCodeAt(i) & 0xFF;
+  buf[len] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(padded - 8, (len * 8) >>> 0, true);
+  dv.setUint32(padded - 4, Math.floor(len / 0x20000000), true);
+  let a0 = 0x67452301, b0 = 0xEFCDAB89, c0 = 0x98BADCFE, d0 = 0x10325476;
+  for (let off = 0; off < padded; off += 64) {
+    let a = a0, b = b0, c = c0, d = d0;
+    for (let i = 0; i < 64; i++) {
+      let f, g;
+      if (i < 16) { f = (b & c) | (~b & d); g = i; }
+      else if (i < 32) { f = (d & b) | (~d & c); g = (5 * i + 1) % 16; }
+      else if (i < 48) { f = b ^ c ^ d; g = (3 * i + 5) % 16; }
+      else { f = c ^ (b | ~d); g = (7 * i) % 16; }
+      const s = S[(i >> 4) * 4 + (i & 3)];
+      const x = (a + f + K[i] + dv.getUint32(off + g * 4, true)) >>> 0;
+      a = d; d = c; c = b; b = (b + ((x << s) | (x >>> (32 - s)))) >>> 0;
+    }
+    a0 = (a0 + a) >>> 0; b0 = (b0 + b) >>> 0; c0 = (c0 + c) >>> 0; d0 = (d0 + d) >>> 0;
+  }
+  const out = new Uint8Array(16), ov = new DataView(out.buffer);
+  [a0, b0, c0, d0].forEach((v, i) => ov.setUint32(i * 4, v, true));
+  return Array.from(out, b => b.toString(16).padStart(2, "0")).join("");
+}

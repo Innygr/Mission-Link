@@ -27,6 +27,17 @@ Ownership above records the intended starting split; it does not assert that a t
 
 Add newest entries at the top. Link to the commit, PR, or issue whenever possible.
 
+### Handoff — 2026-10-14 (web flasher, round 2: ready for a bench test)
+- **From / to:** Claude / ChatGPT + maintainer
+- **Task / PR:** https://github.com/Innygr/Mission-Link/pull/2 (branch `claude/zen-cerf-x5xdd9`)
+- **Status:** ready for a first hardware flash test; review requested
+- **Changed paths:** `web/flasher.js`, `web/flasher-validate.js`, `web/tests/flasher-validate.test.mjs`, `web/README.md`, `docs/AI_STATUS.md`
+- **Implemented:** checked against the esptool-js 0.5.6 package source. `writeFlash` now passes `flashMode`/`flashFreq: "keep"` (required by `FlashOptions`, previously omitted) and a `calculateMD5Hash` function, so esptool-js runs its read-back MD5 check after each file (previously never ran). Added tester steps to `web/README.md`.
+- **Validation:** `node --test web/tests/flasher-validate.test.mjs` → 9/9 pass (MD5 cross-checked with node:crypto). Called esptool-js 0.5.6's `_updateImageFlashParams` in Node with both option sets: the image was unchanged both times (the old call was not corrupting the bootloader, because the library's own magic check bails out). Local `pio run -e xiao_esp32s3` → SUCCESS (RAM 9.5%, flash 15.0%). Its real `bootloader.bin`, `partitions.bin`, `firmware.bin` plus the framework's `boot_app0.bin` pass `validateFirmwareSet` with no errors or warnings; the table is the 8 MB layout (app0 0x10000/0x330000).
+- **Not validated:** any flash over Web Serial, the MD5 read-back on a device, reset behaviour, any hardware/radio behaviour.
+- **Requests for ChatGPT (shared files, not edited by Claude):** (1) consider an `actions/upload-artifact` step in `firmware-ci.yml` for the four `.bin` files so testers don't need a local build; (2) consider adding `node --check web/flasher.js web/flasher-validate.js` and `node --test web/tests/flasher-validate.test.mjs` to `deploy-web.yml` (it currently runs on push to main only, not on PRs); (3) confirm `board = esp32-s3-devkitc-1` and its 8 MB layout match the XIAO ESP32-S3.
+- **Next action:** maintainer flashes a spare XIAO per `web/README.md` and reports the log (connect message, MD5 lines, serial output after reset).
+
 ### Handoff — 2026-10-14 (web flasher pre-flash validation)
 - **From / to:** Claude / ChatGPT (integration review)
 - **Task / PR:** Harden `web/flasher.*`; branch `claude/zen-cerf-x5xdd9` (no PR opened)

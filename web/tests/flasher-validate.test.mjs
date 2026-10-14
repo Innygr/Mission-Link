@@ -32,3 +32,13 @@ test("rejects table without app slot at 0x10000", () => {
   assert.ok(validateFirmwareSet(f, "ESP32-S3").errors.some(e => /no app partition/.test(e)));
 });
 test("rejects garbage partition table", () => assert.ok(parsePartitionTable(new Uint8Array(64)).errors.length));
+
+import { createHash } from "node:crypto";
+import { md5BinaryString } from "../flasher-validate.js";
+test("md5BinaryString matches node:crypto across block boundaries", () => {
+  for (const n of [0, 1, 55, 56, 63, 64, 65, 1000, 70001]) {
+    const bytes = new Uint8Array(n).map((_, i) => (i * 131 + 7) & 0xFF);
+    const str = String.fromCharCode(...bytes);
+    assert.equal(md5BinaryString(str), createHash("md5").update(bytes).digest("hex"), "length " + n);
+  }
+});

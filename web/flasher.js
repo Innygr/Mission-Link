@@ -1,4 +1,4 @@
-import { validateFirmwareSet } from "./flasher-validate.js";
+import { validateFirmwareSet, md5BinaryString } from "./flasher-validate.js";
 
 const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
 
@@ -148,9 +148,15 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
       $("progress-label").textContent = "Writing firmware…";
       await loader.writeFlash({
         fileArray: files,
+        // FlashOptions requires all three. Passing "keep" explicitly leaves the bootloader header untouched by contract,
+        // instead of relying on esptool-js 0.5.6's header check happening to bail out on undefined mode/freq.
         flashSize: "keep",
+        flashMode: "keep",
+        flashFreq: "keep",
         eraseAll,
         compress: true,
+        // Enables esptool-js's read-back MD5 comparison after each file is written.
+        calculateMD5Hash: md5BinaryString,
         reportProgress(fileIndex, written, total) {
           const percent = total > 0 ? Math.min(100, Math.round((written / total) * 100)) : 0;
           $("progress").value = percent;
@@ -160,8 +166,8 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
       });
       $("progress").value = 100; $("progress-percent").textContent = "100%";
       $("progress-label").textContent = "Flash write completed";
-      log("Flash write completed. Reset the board and check its serial output.");
-      setResult("Flash write completed. This confirms the write operation—not that the firmware has booted or radio hardware is working.", "success");
+      log("Flash write completed and each file's MD5 matched the flash contents. Press RESET on the board (or replug USB) and check its serial output.");
+      setResult("Flash write completed and verified by MD5 read-back. This confirms the write operation—not that the firmware has booted or radio hardware is working.", "success");
     } catch (error) {
       log("Flash failed: " + (error?.message || String(error)));
       setResult("Flash failed: " + (error?.message || String(error)), "error");

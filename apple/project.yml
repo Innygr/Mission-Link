@@ -14,10 +14,12 @@ targets:
     platform: iOS
     sources:
       - path: MissionLink
+        excludes:
+          - Info.plist
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.innygr.missionlink
         PRODUCT_NAME: MissionLink
-        INFOPLIST_KEY_NSBlueToothAlwaysUsageDescription: "MissionLink uses Bluetooth to connect directly to your MissionLink radio and send local commands."
+        INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription: "MissionLink uses Bluetooth to connect directly to your MissionLink radio and send local commands."
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         IPHONEOS_DEPLOYMENT_TARGET: "18.0"

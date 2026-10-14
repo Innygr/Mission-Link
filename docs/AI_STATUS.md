@@ -1,3 +1,16 @@
+## AI-to-AI collaboration handoff (read before making changes)
+
+- **Coordination issue:** https://github.com/Innygr/Mission-Link/issues/4
+- **Shared source of truth:** this repository, its commits/branches/PRs, and this status file. Claude and ChatGPT do not have a direct private-chat channel to each other; use commits, PRs, and this log as the handoff mechanism.
+- **Before work:** inspect recent commits, open PRs/issues, and this file. Do not assume another assistant's work is finished just because the plan mentions it.
+- **Avoid collisions:** Claude owns `web/flasher.html`, `web/flasher.js`, and `web/flasher.css` by default. ChatGPT focuses on host services, firmware, mesh protocol/routing, tests, and documentation, after checking current changes. Ask the maintainer before crossing ownership boundaries.
+- **After work:** record owner, task, changed paths, commit/PR URLs, validation actually run, limitations/blockers, next action, and files that should not be edited concurrently.
+- **Truthful validation:** distinguish source review, local tests, CI results, and physical hardware tests. Never claim a check passed without seeing its result.
+- **RF safety gate:** keep `ML_RF_ENABLED=0` until the exact hardware/pinout/RF switch/antenna path and Canadian compliance are verified and the maintainer approves.
+- **Recent ChatGPT host-service hardening:** [validation changes](https://github.com/Innygr/Mission-Link/commit/81bd7a827741cf085a4d32d7d5e4a9f65ec84d77) and [edge-case tests](https://github.com/Innygr/Mission-Link/commit/a4d67c43a95d3a7ba8154ddfd468f5407094355d). CI has not yet been confirmed for these commits.
+
+---
+
 ### 2026-10-14 — Cross-platform host services foundation
 - **Owner:** ChatGPT, requested by maintainer.
 - **Status:** initial code and docs committed; CI execution not yet confirmed.

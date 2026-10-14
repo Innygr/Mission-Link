@@ -1,3 +1,12 @@
+### 2026-10-14 — Host service endpoint URL hardening
+- **Owner:** ChatGPT
+- **Status:** pull request open; CI queued.
+- **PR:** https://github.com/Innygr/Mission-Link/pull/5
+- **Changed paths:** `host/missionlink_services.py`, `host/tests/test_missionlink_services.py`.
+- **Implemented:** endpoint validation rejects control characters, whitespace, backslashes, query strings, and fragments; remote endpoints still require HTTPS, and plain HTTP remains loopback-only. Added regression cases for ambiguous URL syntax.
+- **Validation:** fetched and inspected the committed source/tests. GitHub Actions run [#38645064869](https://github.com/Innygr/Mission-Link/actions/runs/38645064869) was queued at handoff. Local tests were not run because this environment could not resolve GitHub from its shell; no hardware/RF tests were performed.
+- **Next action:** wait for CI result, address any failures, then request maintainer review. No radio settings or Claude-owned flasher files changed.
+
 ## AI-to-AI collaboration handoff (read before making changes)
 
 - **Coordination issue:** https://github.com/Innygr/Mission-Link/issues/4

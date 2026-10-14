@@ -2,13 +2,18 @@
 
 Native SwiftUI + Core Bluetooth starter targeting **iOS 18.0 and later**.
 
-## Open in Xcode
+## Build the Xcode project
 
-1. On a Mac with Xcode installed, create an iOS App project named `MissionLink` using SwiftUI.
-2. Set the deployment target to iOS 18.0.
-3. Replace the generated app entry point and view with the Swift files in `apple/MissionLink/`.
-4. Add `Info.plist` Bluetooth usage text to the app target's generated Info.plist (or configure the target to use this plist).
-5. Run on a physical iPhone/iPad with Bluetooth enabled. BLE device discovery is not reliably testable in the simulator.
+On a Mac with Xcode installed, install XcodeGen, then from the repository root run:
+
+```sh
+brew install xcodegen
+cd apple
+xcodegen generate
+open MissionLink.xcodeproj
+```
+
+Select an iOS 18+ simulator or a physical iPhone/iPad. BLE discovery requires a physical device for meaningful testing. Review the generated target's Bluetooth usage-description setting before running.
 
 ## Firmware compatibility
 

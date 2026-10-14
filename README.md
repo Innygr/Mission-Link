@@ -2,28 +2,29 @@
 
 Custom encrypted LoRa messaging for XIAO ESP32-S3 + Wio-SX1262.
 
-## Initial scaffold
+## Current scaffold
 
 - USB serial command interface
 - BLE GATT command interface (ESP32-S3)
-- Direct-node and group/channel addressing in the packet model
-- Relay-ready packet metadata (message ID, hop limit, hop count)
-- PlatformIO project and host-side packet codec tests
+- Direct node addressing and group/channel addressing in the packet model
+- Versioned packet codec with bounded fields
+- Relay-ready packet metadata (hop limit, hop count, message ID)
+- PlatformIO host-independent protocol tests
 
-**This is an initial scaffold, not validated radio firmware.** Verify the exact Wio-SX1262 revision, board pin mapping, RF switch setup, and Canadian-compliant radio configuration before enabling RF transmission.
+**Important:** This is the software scaffold, not yet a validated radio firmware build. The exact Wio-SX1262 pin mapping, RF switch setup, and regional radio configuration must be confirmed for your hardware revision before enabling RF transmission. Do not transmit until those settings are verified for Canadian compliance.
 
 ## Build
 
-Install PlatformIO Core:
+Install PlatformIO Core, then from this directory:
 
 ```sh
 pio run
 pio test -e native
 ```
 
-The ESP32-S3 target is a generic compile starting point; it does not guarantee the XIAO/Wio wiring is correct.
+The `esp32-s3-devkitc-1` target is a starting compile target only; it is not a guarantee that the XIAO/Wio board wiring is configured correctly.
 
-## Initial commands
+## Serial commands (planned MVP)
 
 - `help`
 - `status`
@@ -33,24 +34,15 @@ The ESP32-S3 target is a generic compile starting point; it does not guarantee t
 - `join <channel-id>`
 - `leave <channel-id>`
 
-USB serial and BLE share one command dispatcher.
+Commands are parsed through one common dispatcher so USB serial and BLE share behavior.
 
-## Security status
+## Encryption and identity status
 
-Production encryption and key provisioning are **not yet implemented**. Before RF tests, implement AES-256-GCM using a vetted library, nonce uniqueness across resets, authenticated routing metadata, replay protection, and secure key provisioning. Never commit production keys. Fail closed: do not send plaintext if encryption fails.
+The packet envelope reserves the fields needed for encrypted payloads, but production encryption/key provisioning is not enabled in this initial scaffold. Before M1 RF tests, implement AES-256-GCM using ESP-IDF's mbedTLS, a persistent per-device identity, unique nonces that cannot repeat under a key, authenticated headers, replay protection, and a documented key-provisioning procedure. Never ship a shared production key in source control.
 
 ## Network model
 
-- Direct message: unicast to one node ID.
-- Group channel: group ID with a channel-specific key.
-- Relay: forwards ciphertext using routing metadata without message keys.
-- Private direct messages: use a per-peer/session key, not the group key.
-
-## Roadmap
-
-1. Verify hardware revision and build baseline.
-2. Implement authenticated encryption and replay protection.
-3. Integrate SX1262 driver and compliant regional settings.
-4. Implement direct messaging and end-to-end acknowledgements.
-5. Add relay queues, duplicate suppression, and group channels.
-6. Test four nodes; record delivery rate, RSSI, and SNR.
+- **Direct node connection:** unicast to one node ID.
+- **Group channel:** group ID in the packet; group members decrypt with that group's key.
+- **Relay:** relays forward ciphertext based on routing metadata, without group keys.
+- **Private direct message:** should use a per-peer/session key, not the group key.

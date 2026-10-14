@@ -6,6 +6,10 @@ on:
     paths:
       - "web/**"
       - ".github/workflows/deploy-web.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - ".github/workflows/deploy-web.yml"
   workflow_dispatch:
 
 permissions:
@@ -36,12 +40,16 @@ jobs:
           test -s web/icon.svg
           node --check web/app.js
           node --check web/sw.js
+          node --check web/flasher.js
+          node --check web/flasher-validate.js
+          node --test web/tests/flasher-validate.test.mjs
           python3 -m json.tool web/manifest.webmanifest > /dev/null
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
         with:
           path: web
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

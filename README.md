@@ -76,3 +76,16 @@ Production encryption/key provisioning is not implemented yet. The planned ciphe
 - **Direct node connection:** unicast to one node ID.
 - **Group channel:** group ID in the packet; group members decrypt with that group's key.
 - **Relay:** relays forward ciphertext based on routing metadata, without group keys.
+
+
+## Contributing and AI collaboration
+
+This repository uses a shared handoff protocol for human and AI-assisted contributors:
+
+- [Contributor instructions](AGENTS.md)
+- [AI collaboration workflow](docs/AI_COLLABORATION.md)
+- [Current AI work status and handoff log](docs/AI_STATUS.md)
+- [AI task / handoff issue template](.github/ISSUE_TEMPLATE/ai-task.yml)
+- [Coordination issue #1](https://github.com/Innygr/Mission-Link/issues/1)
+
+The repository and its issue tracker provide a shared record, not an automatic live bridge between ChatGPT and Claude. Confirm that each assistant's current integration can access the relevant files or issue before relying on a handoff. RF remains disabled until the hardware configuration and regional requirements are verified.

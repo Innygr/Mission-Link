@@ -4,6 +4,7 @@
 #include "missionlink_config.h"
 #include "mesh_router.h"
 #include "missionlink_radio.h"
+#include "missionlink_display.h"
 
 static const char* BLE_NAME = "MissionLink";
 static const char* SERVICE_UUID = "3f4a0001-7c2e-4a5b-9d11-5b7d6e100001";
@@ -17,6 +18,9 @@ static ml::NodePreset activePreset = ml::NodePreset::Client;
 static ml::MeshRouter meshRouter(activePreset);
 static ml::MissionLinkRadio radioLink;
 static uint8_t localNodeId[8] = {0};
+static NimBLEServer* bleServer = nullptr;
+static ml::StatusDisplay statusDisplay;
+static uint32_t packetsReceived = 0;
 
 static void report(const String& jsonLine) {
   Serial.println(jsonLine);
@@ -79,6 +83,27 @@ static const char* addressModeName(ml::AddressMode mode) {
     case ml::AddressMode::Broadcast: return "broadcast";
   }
   return "unknown";
+}
+
+static void refreshStatusDisplay() {
+  const ml::RadioStatus rs = radioLink.status();
+  ml::ConnectivitySnapshot snap{};
+  snap.firmware = "0.2.1";
+#if ARDUINO_USB_CDC_ON_BOOT
+  snap.usbHostConnected = static_cast<bool>(Serial);
+#endif
+  snap.bleAdvertising = NimBLEDevice::getAdvertising()->isAdvertising();
+  snap.bleClients = bleServer ? bleServer->getConnectedCount() : 0;
+  snap.radioInitialized = rs.initialized;
+  snap.radioReceiving = rs.receiving;
+  snap.radioState = radioStateName(rs.state);
+  snap.hasSignal = packetsReceived > 0;
+  snap.lastRssi = rs.lastRssi;
+  snap.lastSnr = rs.lastSnr;
+  snap.packetsReceived = packetsReceived;
+  snap.rfTransmitEnabled = ML_RF_ENABLED;
+  snap.preset = ml::presetName(activePreset);
+  statusDisplay.update(snap, millis());
 }
 
 static void dispatchCommand(String cmd) {
@@ -165,8 +190,8 @@ void setup() {
   radioLink.beginReceive();
 
   NimBLEDevice::init(BLE_NAME);
-  auto* server = NimBLEDevice::createServer();
-  auto* service = server->createService(SERVICE_UUID);
+  bleServer = NimBLEDevice::createServer();
+  auto* service = bleServer->createService(SERVICE_UUID);
   auto* rx = service->createCharacteristic(
       RX_UUID, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR);
   txChar = service->createCharacteristic(
@@ -176,6 +201,8 @@ void setup() {
   NimBLEDevice::getAdvertising()->addServiceUUID(SERVICE_UUID);
   NimBLEDevice::getAdvertising()->start();
   Serial.println("{\"type\":\"ble\",\"advertising\":true}");
+  // Optional I2C OLED: inactive unless a screen answers at 0x3C/0x3D.
+  statusDisplay.begin(millis());
 }
 
 void loop() {
@@ -204,6 +231,7 @@ void loop() {
   // its verified board config and feature flags are enabled at compile time.
   ml::Packet incoming;
   if (radioLink.poll(incoming)) {
+    ++packetsReceived;
     ml::Packet forwarded;
     const ml::MeshAction action = meshRouter.process(incoming, localNodeId, millis(), forwarded);
     if (action == ml::MeshAction::ForwardOnly ||
@@ -238,5 +266,6 @@ void loop() {
     event += "}";
     report(event);
   }
+  refreshStatusDisplay();
   delay(5);
 }

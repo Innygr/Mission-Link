@@ -1,3 +1,12 @@
+### 2026-10-14 — Optional OLED connectivity status screen
+- **Owner:** Claude (requested by maintainer)
+- **Status:** pushed to branch `claude/zen-cerf-x5xdd9`; review requested. Firmware change outside Claude's default flasher area, so ChatGPT please review.
+- **Changed paths:** `include/missionlink_display.h`, `src/missionlink_display.cpp`, `src/display_format.cpp` (all new), `src/main.cpp` (small hooks: BLE server pointer, rx packet counter, `refreshStatusDisplay()` in `loop()`), `platformio.ini` (`olikraus/U8g2@^2.36.18`; `display_format.cpp` added to the native build filter), `test/test_display_format/` (new), `docs/STATUS_DISPLAY.md` (new).
+- **Implemented:** probes I2C 0x3C/0x3D on GPIO5/GPIO6 at boot and every 5 s. If an SSD1306 answers, the screen shows USB host, BLE (advertising/clients), LoRa state, RX count with last RSSI/SNR, the TX gate and the preset. It redraws ≤2×/s and only on change, re-probes to detect removal, and does nothing without a screen. `-D ML_DISPLAY_ENABLED=0` disables it. No protocol, GATT or storage changes; RF gates untouched.
+- **Validation:** `pio test -e native` → 37/37 (5 new formatter tests). `pio run -e xiao_esp32s3` → SUCCESS (RAM 10.4%, flash 16.8%). Host render of the real U8g2 SSD1306 128×64 frame buffer with the same font and coordinates: all rows fit.
+- **Not validated:** no physical OLED or board test. The I2C probe, SSD1306 output, `Serial` host detection (HWCDC) and BLE client count on hardware are untested. SH1106 screens are not supported.
+- **Next:** maintainer: tell me the exact screen model (if any) and try it on the board. ChatGPT: review the `main.cpp` hooks against your radio work.
+
 ### 2026-10-14 — Flasher connect fix + emulator end-to-end flash test
 - **Owner:** Claude
 - **Status:** pushed to branch `claude/zen-cerf-x5xdd9`; review requested. Builds on ChatGPT's default-firmware work on `main`. I dropped my parallel manifest/source-chooser version so as not to overwrite it.

@@ -25,6 +25,16 @@ Ownership above records the intended starting split; it does not assert that a t
 
 ## Handoff log
 
+### 2026-10-14 — Mesh event diagnostics and CI deliverables
+- **Owner:** ChatGPT
+- **Status:** committed; CI validation running
+- **Commits:** [mesh event metadata](https://github.com/Innygr/Mission-Link/commit/ddc075ea023e34a2845efdeb0cdd62753d14ddfc), [protocol docs](https://github.com/Innygr/Mission-Link/commit/fc5888afc9bc76d30930cb7f0963055b1694642f), [firmware artifacts workflow](https://github.com/Innygr/Mission-Link/commit/36a7c406001946208a0dad31042f4bc238eab8cc), [web validation workflow](https://github.com/Innygr/Mission-Link/commit/12edf3fb8808bc05b48e703bf299b0e6e5879d9a).
+- **Changed paths:** `src/main.cpp`, `docs/CLIENT_PROTOCOL.md`, `.github/workflows/firmware-ci.yml`, `.github/workflows/deploy-web.yml`.
+- **Implemented:** mesh events now retain the numeric action and add stable action names, packet type/address mode, source/destination/message IDs, hop counters, payload byte count, RSSI, and SNR. Protocol docs explicitly say this is diagnostic metadata, not decrypted message delivery. Firmware CI now packages bootloader, partition table, boot_app0, and firmware binaries as a 14-day artifact. Web CI now runs flasher syntax checks and its Node tests on PRs; deploy is skipped for pull requests.
+- **Validation:** earlier native tests passed on the same firmware source; new firmware/web workflow runs are pending. No physical hardware or RF test performed.
+- **Next action:** verify the new workflow runs and artifact contents; then tackle an RF-independent local-delivery/application boundary without exposing plaintext or pretending encryption is implemented.
+
+
 ### 2026-10-14 — Firmware status reporting
 - **Owner:** ChatGPT
 - **Status:** implemented in source; native tests and ESP32-S3 scaffold build passed in GitHub Actions.

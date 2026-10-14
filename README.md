@@ -18,7 +18,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Binary packet format:** `docs/PACKET_FORMAT.md` (protocol v1 codec layout and validation rules).
 - **Radio bring-up checklist:** `docs/RADIO_BRINGUP.md` (staged hardware validation; RF remains disabled).
 - **Bench testing guide:** `docs/TESTING_GUIDE.md` — step-by-step native tests, compile, USB serial, BLE, expected responses, and a test-report template.
-- **Radio adapter:** `src/missionlink_radio.cpp` and `include/missionlink_radio.h` (feature-gated SX1262/RadioLib adapter for receive, decode, RSSI/SNR, and encoded-frame transmit; pin map and RF remain disabled until verified).\n- **Mesh routing module:** `src/mesh_router.cpp` and `include/mesh_router.h` (RF-independent routing policy and native simulation tests; radio-to-router integration remains pending).
+- **Radio adapter:** `src/missionlink_radio.cpp` and `include/missionlink_radio.h` (feature-gated SX1262/RadioLib adapter for receive, decode, RSSI/SNR, and encoded-frame transmit; pin map and RF remain disabled until verified).\n- **Mesh routing module:** `src/mesh_router.cpp` and `include/mesh_router.h` (RF-independent routing policy and native simulation tests; guarded receive-to-router integration is present, but RF is disabled and real mesh delivery is unverified).
 - **Node presets:** `docs/NODE_PRESETS.md` — Client, Repeater, and Gateway roles.
 
 Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is defined in GitHub Actions; physical-device BLE behavior still needs testing.

@@ -7,4 +7,8 @@ void test_round_trip(){
 }
 void test_reject_truncated(){uint8_t bad[]={1,2,0};ml::Packet q;TEST_ASSERT_FALSE(ml::decode(bad,sizeof(bad),q));}
 void test_reject_invalid_hops(){ml::Packet p;p.hopLimit=1;p.hopCount=2;std::vector<uint8_t> bytes;TEST_ASSERT_FALSE(ml::encode(p,bytes));}
-int main(int argc,char** argv){UNITY_BEGIN();RUN_TEST(test_round_trip);RUN_TEST(test_reject_truncated);RUN_TEST(test_reject_invalid_hops);return UNITY_END();}
+void test_reject_invalid_type_on_encode(){ml::Packet p;p.type=(ml::PacketType)99;std::vector<uint8_t> bytes;TEST_ASSERT_FALSE(ml::encode(p,bytes));}
+void test_reject_invalid_mode_on_encode(){ml::Packet p;p.mode=(ml::AddressMode)99;std::vector<uint8_t> bytes;TEST_ASSERT_FALSE(ml::encode(p,bytes));}
+void test_reject_oversized_payload(){ml::Packet p;p.payload.resize(181,0);std::vector<uint8_t> bytes;TEST_ASSERT_FALSE(ml::encode(p,bytes));}
+void test_hex_id_null_is_safe(){TEST_ASSERT_EQUAL_STRING("",ml::hexId(nullptr,8).c_str());}
+int main(int argc,char** argv){UNITY_BEGIN();RUN_TEST(test_round_trip);RUN_TEST(test_reject_truncated);RUN_TEST(test_reject_invalid_hops);RUN_TEST(test_reject_invalid_type_on_encode);RUN_TEST(test_reject_invalid_mode_on_encode);RUN_TEST(test_reject_oversized_payload);RUN_TEST(test_hex_id_null_is_safe);return UNITY_END();}

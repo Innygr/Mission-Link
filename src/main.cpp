@@ -57,6 +57,7 @@ static void dispatchCommand(String cmd) {
     out += "\"}";
     report(out);
   } else if (cmd == "status") {
+    const ml::RadioStatus radioStatus = radioLink.status();
     String out = "{\"type\":\"status\",\"firmware\":\"0.2.1\",\"protocolVersion\":";
     out += String(ML_PROTOCOL_VERSION);
     out += ",\"rfEnabled\":";

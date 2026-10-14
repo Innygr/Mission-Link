@@ -15,7 +15,7 @@ The first RadioLib adapter lives in `include/missionlink_radio.h` and `src/missi
 1. Verify the exact XIAO ESP32-S3 and Wio-SX1262 board revisions and their official wiring.
 2. Add a board-specific configuration with the verified SPI, CS, DIO1, reset, busy, and compliant regional modem settings.
 3. Check the RadioLib version/API against the selected dependency and compile with the verified pin-map feature enabled.
-4. Integrate the adapter's receive events with the packet router and UI/status events.
+4. The firmware loop now polls received frames, passes them through the mesh router, attempts guarded forwarding, and reports mesh events over serial/BLE.
 5. Implement authenticated encryption, replay protection, node identity, acknowledgements, retry policy, and key provisioning before sending user messages.
 6. Run receive-only tests with a known compatible authorized transmitter before any controlled transmit test.
 

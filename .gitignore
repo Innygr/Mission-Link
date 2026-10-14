@@ -1,0 +1,8 @@
+.pio/
+.vscode/
+.DS_Store
+DerivedData/
+build/
+*.xcuserstate
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/

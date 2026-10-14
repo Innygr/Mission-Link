@@ -1,0 +1,27 @@
+/* MissionLink bench test UI */
+.testbench-shell{max-width:1040px}
+.testbench-hero{padding-bottom:1rem}
+.testbench-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1.5rem 0}
+.testbench-panel{min-width:0}
+.testbench-panel .panel-heading{margin-bottom:.85rem}
+.testbench-actions{display:flex;flex-wrap:wrap;gap:.65rem;margin:.9rem 0}
+.testbench-status{padding:.8rem 1rem;border:1px solid var(--line,#27343e);border-radius:12px;background:rgba(255,255,255,.025);font-size:.92rem;margin-top:.85rem}
+.testbench-status.connected{border-color:#3a9678}
+.testbench-status.error{border-color:#b95757}
+.testbench-status strong{display:block;margin-bottom:.2rem}
+.testbench-checks{display:grid;gap:.55rem;margin-top:1rem}
+.testbench-check{display:flex;align-items:flex-start;gap:.7rem;padding:.7rem .8rem;border:1px solid var(--line,#27343e);border-radius:10px}
+.testbench-check .check-icon{flex:0 0 1.4rem;text-align:center;font-weight:700}
+.testbench-check.pass{border-color:#34886c}
+.testbench-check.fail{border-color:#b95757}
+.testbench-check.pending{opacity:.8}
+.testbench-check small{display:block;margin-top:.2rem;color:var(--muted,#9aa7b2);line-height:1.4}
+.testbench-console{width:100%;min-height:230px;max-height:390px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#0b1116;color:#c5d5df;padding:1rem;border-radius:12px;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+.testbench-command-row{display:flex;gap:.65rem}
+.testbench-command-row input{min-width:0;flex:1}
+.testbench-chip{display:inline-flex;align-items:center;border:1px solid var(--line,#27343e);border-radius:999px;padding:.3rem .6rem;font-size:.75rem;color:var(--muted,#9aa7b2)}
+.testbench-note{font-size:.87rem;line-height:1.6}
+.testbench-kpis{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}
+.testbench-kpis span{padding:.4rem .65rem;border-radius:8px;background:rgba(255,255,255,.04);font-size:.82rem}
+.testbench-kpis b{margin-right:.25rem}
+@media(max-width:720px){.testbench-grid{grid-template-columns:1fr}.testbench-command-row{flex-direction:column}.testbench-command-row .button{width:100%}}

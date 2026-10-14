@@ -9,24 +9,43 @@ Commands are case-sensitive, trimmed UTF-8 strings. Firmware bounds command inpu
 - USB serial input is processed as newline-delimited commands. An overlong line is discarded in full; the truncated prefix is never dispatched.
 - Each BLE write must be 256 bytes or fewer. Oversized writes are rejected.
 
-Current accepted command forms:
+Currently implemented diagnostic/control commands:
 
 - `help`
 - `status`
 - `nodes`
+- `presets`
+- `preset client`
+- `preset repeater`
+- `preset gateway`
+
+Placeholder command families (return `type=error`, code `not_ready`):
+
 - `send <node-id> <text>`
 - `group <channel-id> <text>`
 - `join <channel-id>`
 - `leave <channel-id>`
 
-The final four command families are placeholders and return `type=error` until the radio and security layers are implemented.
+Preset selection is held in RAM only and resets to Client on reboot. It changes the RF-independent routing policy object only; the radio receive/transmit path is not connected.
 
 ## Events
 
-Status response (firmware 0.2.1):
+Status response (firmware 0.2.1; fields may evolve):
 
 ```json
-{"type":"status","firmware":"0.2.1","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false}
+{"type":"status","firmware":"0.2.1","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false,"preset":"client"}
+```
+
+Preset list response:
+
+```json
+{"type":"presets","items":[{"id":"client","description":"End device; never relays packets."},{"id":"repeater","description":"Relays traffic without presenting group traffic locally."},{"id":"gateway","description":"Relays traffic and delivers group traffic locally."}]}
+```
+
+Preset selection response:
+
+```json
+{"type":"preset","active":"repeater"}
 ```
 
 Node discovery response:
@@ -42,6 +61,13 @@ Error response:
 ```
 
 Boot and BLE events report firmware startup/advertising. Clients should tolerate unknown event types and optional fields for forward compatibility. BLE notification delivery is best-effort; clients should not treat a command write as proof that a response was received.
+
+## BLE identifiers
+
+- Device name: `MissionLink`
+- Service: `3f4a0001-7c2e-4a5b-9d11-5b7d6e100001`
+- RX write characteristic: `3f4a0002-7c2e-4a5b-9d11-5b7d6e100001`
+- TX read/notify characteristic: `3f4a0003-7c2e-4a5b-9d11-5b7d6e100001`
 
 ## Security boundaries
 

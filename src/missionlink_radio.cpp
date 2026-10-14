@@ -75,7 +75,7 @@ bool MissionLinkRadio::beginReceive() {
 #if !ML_RADIO_PINMAP_VERIFIED
   state_ = RadioState::PinmapUnverified;
   return false;
-#elif !ML_RADIO_RX_ENABLED
+#elif !ML_RADIO_RX_ENABLED && !ML_RF_ENABLED
   state_ = RadioState::Disabled;
   return false;
 #else
@@ -86,10 +86,13 @@ bool MissionLinkRadio::beginReceive() {
                                    ML_RADIO_SYNC_WORD, ML_RADIO_TX_POWER_DBM);
     if (rc != RADIOLIB_ERR_NONE) {
       state_ = RadioState::ReceiveError;
+      initialized_ = false;
+      receiving_ = false;
       return false;
     }
     initialized_ = true;
   }
+#if ML_RADIO_RX_ENABLED
   const int16_t rc = radio.startReceive();
   if (rc != RADIOLIB_ERR_NONE) {
     state_ = RadioState::ReceiveError;
@@ -97,6 +100,10 @@ bool MissionLinkRadio::beginReceive() {
     return false;
   }
   receiving_ = true;
+#else
+  // TX-only builds still need the radio initialized, but do not enter RX mode.
+  receiving_ = false;
+#endif
   state_ = RadioState::Ready;
   return true;
 #endif
@@ -110,15 +117,21 @@ bool MissionLinkRadio::poll(Packet& packet) {
   if (!initialized_ || !receiving_ || !radio.available()) return false;
   const size_t length = radio.getPacketLength();
   if (length < 32 || length > 32 + ML_MAX_PAYLOAD) {
-    state_ = RadioState::DecodeError;
-    radio.startReceive();
+    const int16_t restartRc = radio.startReceive();
+    receiving_ = restartRc == RADIOLIB_ERR_NONE;
+    state_ = receiving_ ? RadioState::DecodeError : RadioState::ReceiveError;
     return false;
   }
   uint8_t buffer[32 + ML_MAX_PAYLOAD];
   const int16_t rc = radio.readData(buffer, length);
   lastRssi_ = static_cast<int16_t>(radio.getRSSI());
   lastSnr_ = static_cast<int8_t>(radio.getSNR());
-  radio.startReceive();
+  const int16_t restartRc = radio.startReceive();
+  receiving_ = restartRc == RADIOLIB_ERR_NONE;
+  if (!receiving_) {
+    state_ = RadioState::ReceiveError;
+    return false;
+  }
   if (rc != RADIOLIB_ERR_NONE || !decode(buffer, length, packet)) {
     state_ = RadioState::DecodeError;
     return false;
@@ -146,14 +159,21 @@ bool MissionLinkRadio::transmit(const Packet& packet) {
   receiving_ = false;
   const int16_t rc = radio.transmit(frame.data(), frame.size());
   if (rc != RADIOLIB_ERR_NONE) {
-    state_ = RadioState::TransmitError;
-    radio.startReceive();
-    receiving_ = true;
+    if (ML_RADIO_RX_ENABLED) {
+      receiving_ = radio.startReceive() == RADIOLIB_ERR_NONE;
+      state_ = receiving_ ? RadioState::TransmitError : RadioState::ReceiveError;
+    } else {
+      receiving_ = false;
+      state_ = RadioState::TransmitError;
+    }
     return false;
   }
-  state_ = RadioState::Ready;
   if (ML_RADIO_RX_ENABLED) {
     receiving_ = radio.startReceive() == RADIOLIB_ERR_NONE;
+    state_ = receiving_ ? RadioState::Ready : RadioState::ReceiveError;
+  } else {
+    receiving_ = false;
+    state_ = RadioState::Ready;
   }
   return true;
 #endif

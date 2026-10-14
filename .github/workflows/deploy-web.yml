@@ -37,10 +37,6 @@ jobs:
           node --check web/app.js
           node --check web/sw.js
           python3 -m json.tool web/manifest.webmanifest > /dev/null
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
         with:

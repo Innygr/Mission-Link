@@ -1,3 +1,14 @@
+### 2026-10-14 — Cross-platform host services foundation
+- **Owner:** ChatGPT, requested by maintainer.
+- **Status:** initial code and docs committed; CI execution not yet confirmed.
+- **Task:** [Issue #3 — platform-independent mesh gateway compatibility](https://github.com/Innygr/Mission-Link/issues/3).
+- **Commits:** [service registry](https://github.com/Innygr/Mission-Link/commit/4c6168ec20b88578230d11375d98fc6d8064c690), [registry tests](https://github.com/Innygr/Mission-Link/commit/87cd025ce45c32534062957f085799b0ba11e581), [test import fix](https://github.com/Innygr/Mission-Link/commit/9da4e9ae205b6ce1d263a5655b95090925a4dc31), [host package marker](https://github.com/Innygr/Mission-Link/commit/8467ea46f55a48ac08d45484488a74d01a289f66), [host-services architecture](https://github.com/Innygr/Mission-Link/commit/95faaa1bab6b45035e4cbd5f9c773d06a9cffd90), [CI tests](https://github.com/Innygr/Mission-Link/commit/c76d7b1cf4fe0a453b7c0c84e666a185eeb4e2b1), [README](https://github.com/Innygr/Mission-Link/commit/57aab985ccd2934b3f4da31f69198b60c85eef69).
+- **Changed paths:** `host/missionlink_services.py`, `host/tests/test_missionlink_services.py`, `host/__init__.py`, `docs/HOST_SERVICES.md`, `.github/workflows/firmware-ci.yml`, `README.md`.
+- **Implemented:** platform-independent bounded service registry with stable host/service IDs, capability filtering, health filtering, transport metadata, and conservative mesh-inline payload policy. Added unittest coverage and a CI step. Documented that large file/model data should use an authenticated direct transport while LoRa carries discovery/control metadata.
+- **Not implemented yet:** a live gateway API/server, LAN or USB transport adapter, host discovery, file-storage plugin, local-AI plugin, production authentication, or end-to-end security. This is not yet usable as a live service bridge.
+- **Safety:** `ML_RF_ENABLED` remains `0`; no RF setting was changed and no hardware test is claimed.
+- **Next:** verify CI tests, harden endpoint/schema validation, then design a versioned authenticated gateway API with loopback-first binding and explicit permissions.
+
 ### 2026-10-14 — Enable receive-only Wio-SX1262 radio path
 - **Owner:** ChatGPT, requested by maintainer.
 - **Status:** configuration committed; ESP32-S3 CI build and native tests running.

@@ -11,13 +11,12 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Web/PWA:** `web/` — responsive local dashboard, installable web app manifest, offline static-asset caching, and a USB serial console in supported desktop Chromium browsers.
 - **Apple app:** `apple/MissionLink/` — SwiftUI + Core Bluetooth starter targeting iOS 18 and later. It uses the GATT UUIDs currently in `src/main.cpp`.
 - **Architecture notes:** `docs/CLIENT_ARCHITECTURE.md`.
-- **Security and glyph transport design:** `docs/CIPHER_SUITES.md` (planned; not implemented in firmware yet).
-- **Cipher suites and Wingdings-style transport:** `docs/CIPHER_SUITES.md` (design proposal; not implemented yet).
+- **Security and glyph transport design:** `docs/CIPHER_SUITES.md` (design proposal; not implemented in firmware yet).
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.
 
-Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is now defined in GitHub Actions; physical-device BLE behavior still needs testing.
+Safari on iOS does not support Web Bluetooth, so the PWA cannot directly connect to the radio over BLE. Use the native Apple app for direct BLE access. The iOS app source is a starter. An iOS simulator build check is defined in GitHub Actions; physical-device BLE behavior still needs testing.
 
-A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The latest logo integration deployment succeeded; the live site may take a short time to refresh, and installed PWAs may need a reload to refresh cached assets.
+A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The latest logo integration deployment succeeded; installed PWAs may need a reload to refresh cached assets.
 
 ## Firmware scaffold (0.2.1)
 
@@ -26,8 +25,9 @@ A GitHub Actions workflow validates and deploys `web/` to GitHub Pages. The late
 - Direct node addressing and group/channel addressing in the packet model
 - Versioned packet codec with bounded fields
 - Relay-ready packet metadata (hop limit, hop count, message ID)
-- PlatformIO host-independent protocol tests
-- JSON Lines status/help/error events shared by USB serial and BLE\n- Bounded command input: oversized USB lines are discarded whole, and oversized BLE writes are rejected
+- PlatformIO host-independent protocol tests, including malformed-frame rejection
+- JSON Lines status/help/error events shared by USB serial and BLE
+- Bounded command input: oversized USB lines are discarded whole, and oversized BLE writes are rejected
 - GitHub Actions workflows for web validation, packet tests, ESP32 compile, and iOS simulator compile
 
 ## Build

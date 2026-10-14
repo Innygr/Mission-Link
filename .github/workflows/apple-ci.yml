@@ -25,6 +25,6 @@ jobs:
       - name: Generate Xcode project
         working-directory: apple
         run: xcodegen generate
-      - name: Build for iOS 18 simulator
+      - name: Build with iOS 16.7 deployment target
         working-directory: apple
-        run: xcodebuild -project MissionLink.xcodeproj -scheme MissionLink -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=18.0 build
+        run: xcodebuild -project MissionLink.xcodeproj -scheme MissionLink -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=16.7 build

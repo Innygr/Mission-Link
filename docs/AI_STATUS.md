@@ -27,11 +27,11 @@ Ownership above records the intended starting split; it does not assert that a t
 
 ### 2026-10-14 — Firmware status reporting
 - **Owner:** ChatGPT
-- **Status:** implemented in source; CI result not yet confirmed.
+- **Status:** implemented in source; native tests and ESP32-S3 scaffold build passed in GitHub Actions.
 - **Changed paths:** `src/main.cpp`, `docs/CLIENT_PROTOCOL.md`, `docs/TESTING_GUIDE.md`, `README.md`.
 - **Change:** the `status` command now reports the adapter's actual `radioReady`, `radioInitialized`, `radioReceiving`, and `radioState` values instead of hardcoding `radioReady:false`; docs clarify that guarded receive-to-router wiring exists but real RF/mesh delivery is unverified.
-- **Validation:** fetched changed files back from GitHub and inspected the updated status code and documentation. GitHub Actions native packet/mesh tests passed on the firmware-status commit. The ESP32-S3 compile was still running at last check; no physical hardware test was performed.
-- **Next action:** confirm the ESP32-S3 build result and fix any compile failures before adding more behavior.
+- **Validation:** fetched changed files back from GitHub and inspected the updated status code and documentation. GitHub Actions native packet/mesh tests passed on the firmware-status commit. The ESP32-S3 compile completed successfully in GitHub Actions (run [#38625875338](https://github.com/Innygr/Mission-Link/actions/runs/38625875338)); no physical hardware test was performed.
+- **Next action:** next firmware task should target application-level message delivery and explicit radio-state handling, while keeping RF disabled.
 
 
 Add newest entries at the top. Link to the commit, PR, or issue whenever possible.

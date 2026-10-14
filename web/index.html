@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="description" content="MissionLink local radio network dashboard">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>MissionLink</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="MissionLink home"><span class="brand-mark">M</span><span>MissionLink<small>LOCAL RADIO NETWORK</small></span></a>
+    <div class="header-status"><span class="status-dot"></span><span id="connection-label">Not connected</span></div>
+  </header>
+  <main class="shell">
+    <section class="hero">
+      <div><p class="eyebrow">NETWORK CONSOLE <span class="pill">PREVIEW</span></p><h1>Your messages.<br><em>Your network.</em></h1><p class="lede">A local-first control panel for your MissionLink nodes and channels.</p></div>
+      <div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orbit-core">ML</div><span class="orbit-node node-a"></span><span class="orbit-node node-b"></span><span class="orbit-node node-c"></span></div>
+    </section>
+    <section class="notice" id="browser-notice"><span class="notice-icon">i</span><div><strong>Connection availability depends on your device</strong><p>USB serial is supported in compatible desktop Chromium browsers. iPhone/iPad Safari does not support Web Bluetooth, so use the native iOS app for direct BLE access.</p></div></section>
+    <section class="dashboard-grid">
+      <article class="panel connection-panel">
+        <div class="panel-heading"><div><p class="eyebrow">01 / LINK</p><h2>Connect a node</h2></div><span class="icon-chip">↗</span></div>
+        <p class="muted">Connect over USB serial on a supported desktop browser. RF transmission remains disabled in this firmware scaffold.</p>
+        <button id="connect-button" class="button button-primary">Connect over USB</button>
+        <button id="disconnect-button" class="button button-quiet" disabled>Disconnect</button>
+        <div id="transport-detail" class="transport-detail">Waiting for a local connection</div>
+      </article>
+      <article class="panel status-panel">
+        <div class="panel-heading"><div><p class="eyebrow">02 / STATUS</p><h2>Node overview</h2></div><span class="icon-chip">⌁</span></div>
+        <div class="metric-row"><div><span class="metric-label">Known nodes</span><strong id="node-count">—</strong></div><div><span class="metric-label">Radio link</span><strong class="metric-value">Not ready</strong></div></div>
+        <div class="status-line"><span class="status-dot dim"></span><span id="firmware-status">Firmware status unavailable</span></div>
+        <p class="small muted">This dashboard will not invent node or radio status. Values appear when the connected firmware reports them.</p>
+      </article>
+      <article class="panel messages-panel">
+        <div class="panel-heading"><div><p class="eyebrow">03 / MESSAGES</p><h2>Send a command</h2></div><span class="icon-chip">↗</span></div>
+        <label for="command">Firmware command</label>
+        <input id="command" maxlength="256" autocomplete="off" spellcheck="false" placeholder="help">
+        <div class="quick-commands"><button data-command="help">help</button><button data-command="status">status</button><button data-command="nodes">nodes</button></div>
+        <button id="send-button" class="button button-primary" disabled>Send command</button>
+        <p class="small muted">Messaging commands are shown as planned until the radio and encryption layers are implemented.</p>
+      </article>
+      <article class="panel log-panel">
+        <div class="panel-heading"><div><p class="eyebrow">04 / CONSOLE</p><h2>Activity</h2></div><button id="clear-log" class="text-button">Clear</button></div>
+        <div id="console-log" class="console-log" role="log" aria-live="polite"><p class="log-muted">MissionLink Web loaded. Connect a node to begin.</p></div>
+      </article>
+    </section>
+    <footer><span>MISSIONLINK · LOCAL-FIRST BY DESIGN</span><span>RF DISABLED IN CURRENT FIRMWARE</span></footer>
+  </main>
+  <script src="./app.js" defer></script>
+</body>
+</html>

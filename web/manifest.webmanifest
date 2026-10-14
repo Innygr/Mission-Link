@@ -1,0 +1,11 @@
+{
+  "name": "MissionLink",
+  "short_name": "MissionLink",
+  "description": "Local-first MissionLink radio network console",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

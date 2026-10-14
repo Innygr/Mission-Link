@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "web/**"
+      - "src/**"
+      - "include/**"
+      - "platformio.ini"
       - ".github/workflows/deploy-web.yml"
   pull_request:
     paths:
@@ -30,6 +33,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Set up Python for firmware build
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO
+        run: python -m pip install --upgrade platformio
+      - name: Build official XIAO ESP32-S3 firmware
+        run: pio run -e xiao_esp32s3
+      - name: Stage default flasher binaries
+        run: |
+          mkdir -p web/firmware
+          cp .pio/build/xiao_esp32s3/bootloader.bin web/firmware/bootloader.bin
+          cp .pio/build/xiao_esp32s3/partitions.bin web/firmware/partitions.bin
+          cp .pio/build/xiao_esp32s3/firmware.bin web/firmware/firmware.bin
+          cp "$HOME/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin" web/firmware/boot_app0.bin
+          test -s web/firmware/bootloader.bin
+          test -s web/firmware/partitions.bin
+          test -s web/firmware/firmware.bin
+          test -s web/firmware/boot_app0.bin
       - name: Validate required web app files
         run: |
           test -s web/index.html

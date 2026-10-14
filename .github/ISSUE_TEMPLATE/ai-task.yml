@@ -1,0 +1,45 @@
+name: AI / contributor task
+description: Create a scoped task or handoff for ChatGPT, Claude, or a human contributor
+title: "[Task] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read `AGENTS.md`, `docs/AI_COLLABORATION.md`, and `docs/AI_STATUS.md` first. Do not include secrets or private device identifiers.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal and acceptance criteria
+      description: What should be true when this task is complete?
+      placeholder: Describe the desired behavior and how to verify it.
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: Intended owner
+      options:
+        - Human maintainer
+        - Claude
+        - ChatGPT
+        - Any available contributor
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: Paths to change / avoid
+      description: Include files owned by another contributor that should not be edited concurrently.
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: Specify tests, builds, browser checks, or hardware checks. Do not treat unrun checks as passed.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies, decisions, and blockers
+      description: Record hardware facts, linked PRs, required decisions, or missing access.

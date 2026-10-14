@@ -14,6 +14,9 @@ final class BLEManager: NSObject, ObservableObject {
     @Published private(set) var discoveredNames: [UUID: String] = [:]
     @Published private(set) var lines: [String] = ["MissionLink iOS ready. RF remains disabled in the current firmware."]
     @Published private(set) var selectedName = "No node selected"
+    @Published private(set) var firmwareVersion = "Unknown"
+    @Published private(set) var rfEnabled = false
+    @Published private(set) var knownNodeCount: Int? = nil
 
     private var central: CBCentralManager!
     private var peripherals: [UUID: CBPeripheral] = [:]
@@ -137,7 +140,31 @@ extension BLEManager: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let error { append("Read/notify failed: \(error.localizedDescription)"); return }
         guard let data = characteristic.value, let text = String(data: data, encoding: .utf8) else { return }
-        text.split(whereSeparator: \.isNewline).forEach { append(String($0)) }
+        text.split(whereSeparator: \.isNewline).forEach { handleFirmwareLine(String($0)) }
+    }
+
+    private func handleFirmwareLine(_ line: String) {
+        guard let data = line.data(using: .utf8),
+              let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let type = event["type"] as? String else {
+            append(line)
+            return
+        }
+        switch type {
+        case "status", "ready", "boot":
+            if let version = event["firmware"] as? String { firmwareVersion = version }
+            if let enabled = event["rfEnabled"] as? Bool { rfEnabled = enabled }
+            append("Firmware \(firmwareVersion) · RF \(rfEnabled ? "enabled" : "disabled")")
+        case "nodes":
+            if let items = event["items"] as? [Any] { knownNodeCount = items.count }
+            append("Node discovery is not implemented in this firmware yet.")
+        case "error":
+            append("Error [\(event["code"] as? String ?? "unknown")]: \(event["message"] as? String ?? "Unknown error")")
+        case "help":
+            append("Firmware command list received.")
+        default:
+            append(line)
+        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {

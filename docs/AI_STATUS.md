@@ -1,3 +1,17 @@
+## Multi-assistant collaboration (ChatGPT + Claude + Gemini)
+
+- **Shared coordination issue:** https://github.com/Innygr/Mission-Link/issues/4
+- **Source of truth:** GitHub commits, pull requests, issues, and this file. The assistants do not have a direct private channel to one another; each assistant must be given the repo/issue links in its own conversation.
+- **Claude default ownership:** web flasher UI (`web/flasher.html`, `web/flasher.js`, `web/flasher.css)); do not edit those paths unless the maintainer reassigns them.
+- **ChatGPT default ownership:** host services, firmware, mesh protocol/routing, tests, and coordination/docs, after checking recent commits and open PRs.
+- **Gemini suggested role:** independent reviewer / architecture critic. Ask it to review the current implementation, threat model, API design, test coverage, and PR diffs; have it report concrete findings with file/line references and proposed tests. It should avoid editing ChatGPT- or Claude-owned files unless the maintainer explicitly assigns implementation work.
+- **Before any assistant edits:** read this file and Issue #4; inspect the latest `main`, commits, branches, open PRs, and ownership notes. Do not assume a chat's summary is newer than GitHub.
+- **Handoffs:** report task/owner, changed paths, commit or PR link, validation actually run, limitations/blockers, next step, and files to avoid. Prefer review comments or a separate branch/PR over overlapping edits.
+- **Validation honesty:** distinguish static review, local tests, CI, and physical hardware tests. Never report checks as passing without seeing the result.
+- **RF safety gate:** keep `ML_RF_ENABLED=0` until exact board/pinout/RF switch/antenna details and Canadian compliance are verified and the maintainer approves.
+
+---
+
 ## AI-to-AI collaboration handoff (read before making changes)
 
 - **Coordination issue:** https://github.com/Innygr/Mission-Link/issues/4

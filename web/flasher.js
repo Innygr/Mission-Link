@@ -9,6 +9,13 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
   const logBox = $("flasher-log"), statusBox = $("device-status");
   const fileIds = ["bootloader", "partitions", "bootapp", "application"];
   let ESPLoader = null, Transport = null, port = null, transport = null, loader = null, connected = false, busy = false, chipName = "";
+  const defaultFiles = Object.create(null);
+  const defaultPaths = {
+    bootloader: "./firmware/bootloader.bin",
+    partitions: "./firmware/partitions.bin",
+    bootapp: "./firmware/boot_app0.bin",
+    application: "./firmware/firmware.bin"
+  };
 
   function log(message) {
     const time = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
@@ -21,7 +28,51 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
     el.className = "flash-result" + (kind ? " " + kind : "");
   }
   function selectedFilesReady() {
-    return ["bootloader", "partitions", "application"].every(id => $(id).files?.length === 1);
+    return ["bootloader", "partitions", "application"].every(id =>
+      $(id).files?.length === 1 || Boolean(defaultFiles[id])
+    );
+  }
+  function activeFileName(id) {
+    return $(id).files?.[0]?.name || defaultFiles[id]?.name || "";
+  }
+  function refreshFileLabels() {
+    for (const id of fileIds) {
+      const file = $(id).files?.[0];
+      const fallback = defaultFiles[id];
+      $(id + "-name").textContent = file
+        ? file.name + " · " + file.size.toLocaleString() + " bytes (custom)"
+        : fallback
+          ? fallback.name + " · " + fallback.bytes.length.toLocaleString() + " bytes (official build)"
+          : "No file selected";
+    }
+    updateFlashButton();
+  }
+  async function loadDefaultFirmware() {
+    const status = $("default-build-status");
+    const button = $("load-defaults");
+    button.disabled = true;
+    status.textContent = "Loading official MissionLink build…";
+    try {
+      const entries = await Promise.all(Object.entries(defaultPaths).map(async ([id, url]) => {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(url + " returned HTTP " + response.status);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (!bytes.length) throw new Error(url + " is empty");
+        return [id, { name: url.split("/").pop(), bytes }];
+      }));
+      for (const [id, file] of entries) defaultFiles[id] = file;
+      refreshFileLabels();
+      status.textContent = "Official build loaded. Files are from this repository's CI build.";
+      log("Loaded the default MissionLink firmware set from this site's same-origin firmware directory.");
+      log("Default files: bootloader.bin, partitions.bin, boot_app0.bin, firmware.bin.");
+      setResult("Official MissionLink build loaded. The flasher will validate it before writing.", "success");
+    } catch (error) {
+      status.textContent = "Could not load the official build; choose files manually.";
+      log("Default firmware load failed: " + (error?.message || String(error)));
+      refreshFileLabels();
+    } finally {
+      button.disabled = false;
+    }
   }
   function updateFlashButton() {
     flashButton.disabled = !connected || busy || !selectedFilesReady();
@@ -42,7 +93,9 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
     };
   }
   async function connect() {
-    if (!("serial" in navigator)) {
+    refreshFileLabels();
+  loadDefaultFirmware();
+  if (!("serial" in navigator)) {
       log("Web Serial is not available. Use desktop Chrome or Edge over HTTPS, with a USB data cable.");
       setResult("This browser cannot flash USB serial devices.", "error");
       return;
@@ -90,13 +143,16 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
     return Array.from(digest, b => b.toString(16).padStart(2, "0")).join("");
   }
   async function readFile(id, address) {
-    const file = $(id).files?.[0];
-    if (!file) return null;
-    if (!file.name.toLowerCase().endsWith(".bin")) throw new Error(file.name + " does not look like a .bin file.");
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    if (!bytes.length) throw new Error(file.name + " is empty.");
-    log("Loaded " + file.name + " (" + bytes.length.toLocaleString() + " bytes) → 0x" + address.toString(16).toUpperCase());
-    return { data: toBinaryString(bytes), address, bytes, name: file.name };
+    const selected = $(id).files?.[0];
+    const source = selected
+      ? { name: selected.name, bytes: new Uint8Array(await selected.arrayBuffer()) }
+      : defaultFiles[id];
+    if (!source) return null;
+    if (!source.name.toLowerCase().endsWith(".bin")) throw new Error(source.name + " does not look like a .bin file.");
+    const bytes = source.bytes;
+    if (!bytes.length) throw new Error(source.name + " is empty.");
+    log("Loaded " + source.name + " (" + bytes.length.toLocaleString() + " bytes) → 0x" + address.toString(16).toUpperCase() + (selected ? " (custom)" : " (official default)"));
+    return { data: toBinaryString(bytes), address, bytes, name: source.name };
   }
   async function flash() {
     if (!connected || busy) return;
@@ -183,8 +239,7 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
   for (const id of fileIds) {
     $(id).addEventListener("change", () => {
       const file = $(id).files?.[0];
-      $(id + "-name").textContent = file ? file.name + " · " + file.size.toLocaleString() + " bytes" : "No file selected";
-      updateFlashButton();
+      refreshFileLabels();
     });
   }
   navigator.serial?.addEventListener("disconnect", () => {
@@ -192,6 +247,7 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
     log(busy ? "USB device disappeared during flashing. The board may be left with incomplete firmware; reconnect, hold BOOT, and flash again." : "USB device was unplugged.");
     if (!busy) { transport = null; loader = null; port = null; chipName = ""; setConnected(false); setResult("Device unplugged."); }
   });
+  $("load-defaults").addEventListener("click", loadDefaultFirmware);
   connectButton.addEventListener("click", connect);
   disconnectButton.addEventListener("click", disconnect);
   flashButton.addEventListener("click", flash);

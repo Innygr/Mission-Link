@@ -15,10 +15,13 @@ class MeshRouter {
   static constexpr uint8_t MAX_FORWARDS_PER_WINDOW = 8;
   static constexpr uint8_t MAX_FORWARDS_PER_SOURCE_WINDOW = 3;
   static constexpr size_t SOURCE_BUCKETS = 8;
-  MeshRouter();
+  explicit MeshRouter(NodePreset preset = NodePreset::Client);
+  void setPreset(NodePreset preset);
+  NodePreset preset() const { return preset_; }
   MeshAction process(const Packet& incoming, const uint8_t localId[8], uint32_t nowMs, Packet& forwarded);
   void reset();
  private:
+  NodePreset preset_;
   struct SeenEntry { uint8_t source[8]; uint8_t messageId[8]; uint32_t seenAt; bool valid; };
   struct SourceBucket { uint8_t source[8]; uint32_t windowStart; uint8_t forwards; bool valid; };
   SeenEntry seen_[DUPLICATE_CACHE_SIZE];

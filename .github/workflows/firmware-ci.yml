@@ -7,6 +7,8 @@ on:
       - "src/**"
       - "include/**"
       - "test/**"
+      - "web/flasher-validate.js"
+      - "web/tests/**"
       - "platformio.ini"
       - ".github/workflows/firmware-ci.yml"
   pull_request:
@@ -51,6 +53,8 @@ jobs:
           cp .pio/build/xiao_esp32s3/partitions.bin dist/missionlink-firmware/
           cp .pio/build/xiao_esp32s3/firmware.bin dist/missionlink-firmware/
           cp "$HOME/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin" dist/missionlink-firmware/
+      - name: Validate staged firmware against flasher checks
+        run: node web/tests/validate-built-firmware.mjs dist/missionlink-firmware
       - name: Upload flash-ready firmware set
         uses: actions/upload-artifact@v4
         with:

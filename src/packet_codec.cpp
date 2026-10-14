@@ -7,6 +7,8 @@ static void put16(std::vector<uint8_t>& o,uint16_t v){o.push_back((uint8_t)(v>>8
 static uint16_t get16(const uint8_t* p){return (uint16_t(p[0])<<8)|p[1];}
 bool encode(const Packet& p,std::vector<uint8_t>& out){
  if(p.version!=ML_PROTOCOL_VERSION||p.payload.size()>ML_MAX_PAYLOAD)return false;
+ if((uint8_t)p.type<(uint8_t)PacketType::Hello||(uint8_t)p.type>(uint8_t)PacketType::Leave)return false;
+ if((uint8_t)p.mode>(uint8_t)AddressMode::Broadcast)return false;
  if(p.hopCount>p.hopLimit||p.hopLimit>ML_MAX_HOPS)return false;
  out.clear();out.reserve(HEADER_SIZE+p.payload.size());
  out.push_back(p.version);out.push_back((uint8_t)p.type);out.push_back((uint8_t)p.mode);out.push_back(p.flags);
@@ -23,5 +25,5 @@ bool decode(const uint8_t* data,size_t len,Packet& out){
  size_t pos=4;std::copy(data+pos,data+pos+8,out.source);pos+=8;std::copy(data+pos,data+pos+8,out.destination);pos+=8;std::copy(data+pos,data+pos+8,out.messageId);
  out.hopLimit=hopLimit;out.hopCount=hopCount;out.payload.assign(data+HEADER_SIZE,data+len);return true;
 }
-std::string hexId(const uint8_t* id,size_t n){static const char* h="0123456789abcdef";std::string s;s.reserve(n*2);for(size_t i=0;i<n;i++){s.push_back(h[id[i]>>4]);s.push_back(h[id[i]&15]);}return s;}
+std::string hexId(const uint8_t* id,size_t n){if(!id&&n)return {};static const char* h="0123456789abcdef";std::string s;s.reserve(n*2);for(size_t i=0;i<n;i++){s.push_back(h[id[i]>>4]);s.push_back(h[id[i]&15]);}return s;}
 }

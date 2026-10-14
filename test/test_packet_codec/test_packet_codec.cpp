@@ -22,9 +22,10 @@ void test_mesh_rejects_zero_source_and_message_id(){ ml::MeshRouter r; auto p=ma
  TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,10,f)); p=makePacket(); memset(p.messageId,0,8);
  TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,10,f)); }
 void test_mesh_global_rate_limit(){ ml::MeshRouter r; ml::Packet f;
- for(uint8_t i=1;i<=ml::MeshRouter::MAX_FORWARDS_PER_WINDOW;++i){auto p=makePacket();p.messageId[7]=i;
+ for(uint8_t i=1;i<=ml::MeshRouter::MAX_FORWARDS_PER_WINDOW;++i){auto p=makePacket();p.messageId[7]=i;p.source[7]=i;
  TEST_ASSERT_EQUAL((int)ml::MeshAction::ForwardOnly,(int)r.process(p,B,100,f));}
  auto p=makePacket();p.messageId[7]=99; TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,100,f));
+ p.messageId[7]=100;
  TEST_ASSERT_EQUAL((int)ml::MeshAction::ForwardOnly,(int)r.process(p,B,1100,f)); }
 void test_mesh_duplicate_cache_expires(){ ml::MeshRouter r; auto p=makePacket(ml::AddressMode::Broadcast); ml::Packet f;
  TEST_ASSERT_EQUAL((int)ml::MeshAction::DeliverAndForward,(int)r.process(p,B,10,f));

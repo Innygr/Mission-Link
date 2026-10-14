@@ -22,6 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Node.js for syntax checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Validate required web app files
         run: |
           test -s web/index.html
@@ -29,8 +33,16 @@ jobs:
           test -s web/app.js
           test -s web/manifest.webmanifest
           test -s web/sw.js
+          test -s web/icon.svg
+          node --check web/app.js
+          node --check web/sw.js
+          python3 -m json.tool web/manifest.webmanifest > /dev/null
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: web
   deploy:

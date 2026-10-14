@@ -25,6 +25,16 @@ Ownership above records the intended starting split; it does not assert that a t
 
 ## Handoff log
 
+### 2026-10-14 — Flasher defaults to this repository's own firmware build
+- **Owner:** ChatGPT, requested by maintainer; overlaps Claude's flasher ownership, so surfaced in the shared handoff.
+- **Status:** committed; GitHub Actions deployment/build validation pending.
+- **Commits:** [flasher UI](https://github.com/Innygr/Mission-Link/commit/713ecf9366da51ea2be45c1aceb3f3809a5926d8), [default file loading](https://github.com/Innygr/Mission-Link/commit/5071c058fb5e15df79c67e2f971814a8b61a23e9), [service-worker cache bump](https://github.com/Innygr/Mission-Link/commit/d0fc52fa97d2786a60b01cbd61d4052665491fdc), [build/deploy workflow](https://github.com/Innygr/Mission-Link/commit/3215d46088667c1669dfc84f433e376037a5b4ff).
+- **Changed paths:** `web/flasher.html`, `web/flasher.js`, `web/sw.js`, `.github/workflows/deploy-web.yml`.
+- **Implemented:** the Pages workflow builds the current `main` source for `seeed_xiao_esp32s3`, stages `bootloader.bin`, `partitions.bin`, `boot_app0.bin`, and `firmware.bin` into the site artifact, and the flasher fetches those four same-origin files as its defaults. Users can still override files individually. Existing pre-flash checks still run before writing. Workflow runs for firmware source changes as well as web changes.
+- **Validation:** source changes pushed; checking CI. No physical flash performed.
+- **Next action:** confirm Pages build/deploy succeeds, verify all four files are published and served, then let Claude know this intentionally changes their flasher paths.
+
+
 ### 2026-10-14 — Mesh event diagnostics and CI deliverables
 - **Owner:** ChatGPT
 - **Status:** committed; CI validation running

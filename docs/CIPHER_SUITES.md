@@ -12,7 +12,7 @@ MissionLink separates cryptographic protection from how encrypted bytes are repr
 | 0x02 | ChaCha20-Poly1305 | Alternative authenticated-encryption suite | Planned |
 | 0x80 | Classical-cipher demo | Educational Caesar/Vigenere demonstrations only | Optional future demo; never for private traffic |
 
-Production suites must provide authenticated encryption. Do not implement a home-grown cipher, silently downgrade between suites, or accept unauthenticated plaintext as a fallback. Peers must negotiate or be configured for an allowed suite and reject unsupported suite IDs.
+Production suites must provide authenticated encryption. Do not implement a home-grown cipher, silently downgrade between suites, or accept unauthenticated plaintext as a fallback. Peers must negotiate or be configured for an allowed suite and reject unsupported suite IDs. AES-256-GCM and ChaCha20-Poly1305 are alternative suites, not two algorithms to run sequentially on every packet by default. Supporting more algorithms increases code size, test burden, and downgrade/configuration risk; it does not automatically increase security.
 
 ### Required security rules
 
@@ -23,6 +23,17 @@ Production suites must provide authenticated encryption. Do not implement a home
 - Keep private-message keys separate from group keys. Relays forward ciphertext and do not receive message keys.
 - Define key provisioning, rotation, revocation, and device-reset behavior before calling the system production-secure.
 - Do not put keys or plaintext secrets in logs, test fixtures, or source control.
+
+## Defense-in-depth layers (recommended design)
+
+“Stacking ciphers” should mean **separate, well-defined security boundaries**, not blindly encrypting the same bytes with several ciphers in sequence:
+
+1. **End-to-end message layer:** encrypt and authenticate the message for its destination (or channel members). This ciphertext remains protected across every relay.
+2. **Optional hop-security layer:** where a relay link needs it, authenticate/encrypt the *outer hop frame* with a separate link key. Each relay can remove and replace this outer layer for the next hop, but cannot read or alter the authenticated inner message.
+3. **Replay protection and identity:** enforce nonce uniqueness, authenticated sender identity/key association, and duplicate detection. These complement encryption rather than acting as extra ciphers.
+4. **Transport representation:** compact binary is the default. The optional glyph view is applied only after encryption and is not counted as a security layer.
+
+Do not ship hop-by-hop encryption until link-key provisioning and relay trust assumptions are documented. It cannot replace end-to-end encryption. Never invent a bespoke “AES then ChaCha then another cipher” cascade without independent cryptographic review and interoperable test vectors.
 
 ## Wingdings-style transport mode
 

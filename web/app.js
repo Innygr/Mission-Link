@@ -4,7 +4,7 @@
   const connectButton = $("connect-button"), disconnectButton = $("disconnect-button");
   const sendButton = $("send-button"), commandInput = $("command");
   const logBox = $("console-log"), connectionLabel = $("connection-label");
-  let port = null, reader = null, writer = null, keepReading = false, decoder = new TextDecoder();
+  let port = null, reader = null, writer = null, keepReading = false, decoder = new TextDecoder(), serialTextBuffer = "";
   function log(message, kind = "") {
     const row = document.createElement("p");
     const time = document.createElement("span");
@@ -60,7 +60,7 @@
       port = await navigator.serial.requestPort();
       await port.open({baudRate:115200});
       writer = port.writable.getWriter();
-      setConnected(true);
+      serialTextBuffer = "";\n      decoder = new TextDecoder();\n      setConnected(true);
       log("USB serial opened at 115200 baud.");
       keepReading = true;
       readLoop();
@@ -78,10 +78,10 @@
           const {value, done} = await reader.read();
           if (done) break;
           if (value) {
-            const text = decoder.decode(value, {stream:true});
-            text.split(/\r?\n/).filter(Boolean).forEach(line => {
-              handleFirmwareLine(line);
-            });
+            serialTextBuffer += decoder.decode(value, {stream:true});
+            const completeLines = serialTextBuffer.split(/\r?\n/);
+            serialTextBuffer = completeLines.pop() ?? "";
+            completeLines.filter(Boolean).forEach(line => handleFirmwareLine(line));
           }
         }
       } catch (error) {
@@ -97,7 +97,7 @@
     try { if (reader) await reader.cancel(); } catch {}
     try { if (writer) { writer.releaseLock(); writer = null; } } catch {}
     try { if (port) await port.close(); } catch (error) { log("Close warning: " + error.message); }
-    port = null; setConnected(false); log("USB serial disconnected.");
+    if (serialTextBuffer.trim()) handleFirmwareLine(serialTextBuffer.trim());\n    serialTextBuffer = "";\n    port = null; setConnected(false); log("USB serial disconnected.");
   }
   async function sendCommand() {
     const command = commandInput.value.trim();

@@ -30,9 +30,10 @@
     </section>
     <section class="panel flasher-panel">
       <div class="panel-heading"><div><p class="eyebrow">02 / FIRMWARE</p><h2>Select build files</h2></div><span class="icon-chip">↥</span></div>
-      <p class="muted">Choose the four binaries produced by a compatible ESP32-S3 build. Addresses follow the standard ESP32-S3 PlatformIO layout.</p>
+      <p class="muted">The latest MissionLink build is loaded by default from this site's own firmware build. You can still replace individual files with a different build if needed.</p>
+      <div class="flasher-actions"><button id="load-defaults" class="button button-quiet" type="button">Reload official MissionLink build</button><span id="default-build-status" class="muted" role="status">Loading official build…</span></div>
       <div class="file-grid">
-        <label class="firmware-file"><span>Bootloader <b>0x0000 · required</b></span><input id="bootloader" type="file" accept=".bin,application/octet-stream" required><small id="bootloader-name">No file selected</small></label>
+        <label class="firmware-file"><span>Bootloader <b>0x0000 · required</b></span><input id="bootloader" type="file" accept=".bin,application/octet-stream" required><small id="bootloader-name">Loading official build…</small></label>
         <label class="firmware-file"><span>Partition table <b>0x8000 · required</b></span><input id="partitions" type="file" accept=".bin,application/octet-stream" required><small id="partitions-name">No file selected</small></label>
         <label class="firmware-file"><span>Boot app <b>0xE000 · optional</b></span><input id="bootapp" type="file" accept=".bin,application/octet-stream"><small id="bootapp-name">No file selected</small></label>
         <label class="firmware-file"><span>Application <b>0x10000 · required</b></span><input id="application" type="file" accept=".bin,application/octet-stream" required><small id="application-name">No file selected</small></label>

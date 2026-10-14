@@ -75,6 +75,8 @@ struct ContentView: View {
                 .font(.headline).foregroundStyle(ble.isConnected ? .green : .secondary)
             Text(ble.bluetoothState).font(.subheadline)
             Text("Selected: \(ble.selectedName)").font(.caption).foregroundStyle(.secondary)
+            Text("Firmware: \(ble.firmwareVersion)").font(.caption).foregroundStyle(.secondary)
+            Text("Known nodes: \(ble.knownNodeCount.map(String.init) ?? "—")").font(.caption).foregroundStyle(.secondary)
             Text("Radio link: not ready").font(.caption.weight(.semibold)).foregroundStyle(.orange)
         }.frame(maxWidth: .infinity, alignment: .leading).cardStyle()
     }

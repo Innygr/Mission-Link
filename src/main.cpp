@@ -36,6 +36,19 @@ static void reportError(const char* code, const char* message) {
   report(out);
 }
 
+static const char* radioStateName(ml::RadioState state) {
+  switch (state) {
+    case ml::RadioState::Disabled: return "disabled";
+    case ml::RadioState::PinmapUnverified: return "pinmap_unverified";
+    case ml::RadioState::Ready: return "ready";
+    case ml::RadioState::ReceiveError: return "receive_error";
+    case ml::RadioState::DecodeError: return "decode_error";
+    case ml::RadioState::TransmitBlocked: return "transmit_blocked";
+    case ml::RadioState::TransmitError: return "transmit_error";
+  }
+  return "unknown";
+}
+
 static void dispatchCommand(String cmd) {
   cmd.trim();
   if (cmd == "help") {
@@ -62,7 +75,17 @@ static void dispatchCommand(String cmd) {
     out += String(ML_PROTOCOL_VERSION);
     out += ",\"rfEnabled\":";
     out += ML_RF_ENABLED ? "true" : "false";
-    out += ",\"bleReady\":true,\"serialReady\":true,\"radioReady\":false,\"preset\":\""; out += ml::presetName(activePreset); out += "\"}";
+    out += ",\"bleReady\":true,\"serialReady\":true,\"radioReady\":";
+    out += (radioStatus.initialized && radioStatus.state == ml::RadioState::Ready) ? "true" : "false";
+    out += ",\"radioInitialized\":";
+    out += radioStatus.initialized ? "true" : "false";
+    out += ",\"radioReceiving\":";
+    out += radioStatus.receiving ? "true" : "false";
+    out += ",\"radioState\":\"";
+    out += radioStateName(radioStatus.state);
+    out += "\",\"preset\":\"";
+    out += ml::presetName(activePreset);
+    out += "\"}";
     report(out);
   } else if (cmd == "nodes") {
     report("{\"type\":\"nodes\",\"items\":[],\"ready\":false,\"reason\":\"discovery_not_implemented\"}");

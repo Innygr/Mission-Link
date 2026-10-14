@@ -9,6 +9,8 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 ## Client applications
 
 - **Web/PWA:** `web/` — responsive local dashboard, installable web app manifest, offline static-asset caching, and a USB serial console in supported desktop Chromium browsers.
+- **Visual test bench:** [`web/testbench.html`](web/testbench.html) — point-and-click USB diagnostics, preset switching, and a firmware response test suite without needing a terminal.
+- **Web flasher:** [`web/flasher.html`](web/flasher.html) — flash CI-built binaries from a supported desktop Chromium browser; download the firmware artifact from [Firmware Builds](https://github.com/Innygr/Mission-Link/actions/workflows/firmware-ci.yml) after a successful build.
 - **Apple app:** `apple/MissionLink/` — SwiftUI + Core Bluetooth starter targeting iOS 16.7 and later. It uses the GATT UUIDs currently in `src/main.cpp`.
 - **Architecture notes:** `docs/CLIENT_ARCHITECTURE.md`.
 - **Security and glyph transport design:** `docs/CIPHER_SUITES.md` (design proposal; not implemented in firmware yet).

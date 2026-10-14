@@ -12,6 +12,9 @@ on:
   pull_request:
     paths:
       - "web/**"
+      - "src/**"
+      - "include/**"
+      - "platformio.ini"
       - ".github/workflows/deploy-web.yml"
   workflow_dispatch:
 

@@ -25,15 +25,10 @@ The PWA can be opened in Safari and added to the Home Screen for the dashboard e
 
 ## Testing the firmware flasher (`flasher.html`)
 
-Not yet verified on hardware. To try it on a spare XIAO ESP32-S3:
+Not yet verified on real hardware. The page loads this repository's CI firmware build from `web/firmware/` by default; picking a file overrides that slot. To try it on a spare XIAO ESP32-S3:
 
-1. Build: `pio run -e xiao_esp32s3`.
-2. Serve `web/` over localhost (see above) and open `flasher.html` in desktop Chrome or Edge.
-3. Select these files:
-   - Bootloader (0x0): `.pio/build/xiao_esp32s3/bootloader.bin`
-   - Partition table (0x8000): `.pio/build/xiao_esp32s3/partitions.bin`
-   - Boot app (0xE000): `~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin`
-   - Application (0x10000): `.pio/build/xiao_esp32s3/firmware.bin`
-4. Connect (hold BOOT while plugging in if needed), flash, then press RESET and check serial output at 115200 baud.
+1. Open the deployed `flasher.html` in desktop Chrome or Edge. For local testing, run `pio run -e xiao_esp32s3`, stage `web/firmware/` as `.github/workflows/deploy-web.yml` does, and serve `web/` over localhost (see above).
+2. Connect (hold BOOT while plugging in if needed), then flash.
+3. Press RESET and check serial output at 115200 baud.
 
-Before writing, the page checks image headers, the ESP32-S3 chip ID, slot sizes and the app partition. After each file is written, esptool-js compares an MD5 read back from flash. Host-side tests for these checks: `node --test web/tests/flasher-validate.test.mjs`.
+Before writing, the page checks image headers, the ESP32-S3 chip ID, slot sizes and the app partition. After each file is written, esptool-js compares an MD5 read back from flash. Host tests: `node --test web/tests/flasher-validate.test.mjs`. Emulator end-to-end test and its limits: `web/tests/e2e/README.md`.

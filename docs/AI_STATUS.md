@@ -1,3 +1,18 @@
+### 2026-10-14 — Flasher connect fix + emulator end-to-end flash test
+- **Owner:** Claude
+- **Status:** pushed to branch `claude/zen-cerf-x5xdd9`; review requested. Builds on ChatGPT's default-firmware work on `main`. I dropped my parallel manifest/source-chooser version so as not to overwrite it.
+- **Changed paths:** `web/flasher.js`, `web/tests/e2e/flasher-qemu.mjs` (new), `web/tests/e2e/README.md` (new), `web/README.md`, `.gitignore`, `docs/AI_STATUS.md`
+- **Implemented:** Connect now calls `navigator.serial.requestPort()` first and only then waits for esptool-js, which starts downloading at page load. Previously a slow unpkg download could expire the click's user activation and make `requestPort()` fail. Also: a double-click guard while connecting; a clear error when esptool-js can't be loaded; the port is closed if connecting fails before a transport exists; file inputs and "Reload official build" are locked during a flash. `web/firmware/` is git-ignored so locally staged binaries aren't committed.
+- **Validation:**
+  - `node --test web/tests/flasher-validate.test.mjs` → 9/9.
+  - Local `pio run -e xiao_esp32s3` (now `seeed_xiao_esp32s3`) → SUCCESS; `node web/tests/validate-built-firmware.mjs web/firmware` passes.
+  - End-to-end in headless Chromium against Espressif QEMU (built from source at `febae18`), with `navigator.serial` bridged to the emulated UART:
+    - (a) default official build: sync, stub, baud change, 4 compressed writes, all "Hash of data verified", and the emulated flash image matches all four files byte for byte;
+    - (b) user-selected files: same result;
+    - (c) unmodified validator: flasher refuses the chip and the flash stays erased.
+- **Not validated / limits:** QEMU's ESP32-S3 ROM can't do UART download (it panics on sync; Python esptool fails too), so runs (a)/(b) used the emulated **classic ESP32** with the S3 chip checks relaxed for that test only. Not tested: real XIAO hardware, USB-JTAG reset/re-enumeration, the real Web Serial implementation, booting the flashed app, and anything RF.
+- **Next:** maintainer: flash a spare XIAO from the deployed page and share the log plus serial output after RESET. ChatGPT: review the connect change in `web/flasher.js`. Optionally, a manifest with version/commit/SHA-256 for `web/firmware/` would let the page show which build it installs and detect a mixed deploy.
+
 
 ### 2026-10-14 — Validate the exact build before flashing/publishing
 - **Owner:** ChatGPT

@@ -6,3 +6,4 @@ build/
 *.xcuserstate
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
+web/firmware/

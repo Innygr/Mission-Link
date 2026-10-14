@@ -1,6 +1,14 @@
 import { validateFirmwareSet, md5BinaryString } from "./flasher-validate.js";
 
 const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
+// Start downloading esptool-js at page load. navigator.serial.requestPort() must run while the click's user
+// activation is still valid, so the Connect handler cannot wait for a slow CDN download before asking for a port.
+let esptoolPromise = null;
+function loadEsptool() {
+  esptoolPromise ??= import(ESPTOOL_URL).catch(error => { esptoolPromise = null; throw error; });
+  return esptoolPromise;
+}
+if ("serial" in navigator) loadEsptool().catch(() => {});
 
 (() => {
   "use strict";
@@ -8,7 +16,7 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
   const connectButton = $("connect"), disconnectButton = $("disconnect"), flashButton = $("flash");
   const logBox = $("flasher-log"), statusBox = $("device-status");
   const fileIds = ["bootloader", "partitions", "bootapp", "application"];
-  let ESPLoader = null, Transport = null, port = null, transport = null, loader = null, connected = false, busy = false, chipName = "";
+  let connecting = false, port = null, transport = null, loader = null, connected = false, busy = false, chipName = "";
   const defaultFiles = Object.create(null);
   const defaultPaths = {
     bootloader: "./firmware/bootloader.bin",
@@ -71,15 +79,18 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
       log("Default firmware load failed: " + (error?.message || String(error)));
       refreshFileLabels();
     } finally {
-      button.disabled = false;
+      button.disabled = busy;
     }
   }
   function updateFlashButton() {
     flashButton.disabled = !connected || busy || !selectedFilesReady();
+    // Keep the firmware selection fixed while it is being written.
+    for (const id of fileIds) $(id).disabled = busy;
+    $("load-defaults").disabled = busy;
   }
   function setConnected(value) {
     connected = value;
-    connectButton.disabled = value || busy;
+    connectButton.disabled = value || busy || connecting;
     disconnectButton.disabled = !value || busy;
     statusBox.textContent = value ? "Connected to " + (chipName || "ESP32-S3") + " bootloader" : "No device connected";
     statusBox.classList.toggle("connected", value);
@@ -99,12 +110,20 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
       setResult("This browser cannot flash USB serial devices.", "error");
       return;
     }
+    if (connecting || connected) return;
     try {
-      if (!ESPLoader) {
-        // Loaded on demand so a blocked CDN shows an error instead of leaving the page inert.
-        ({ ESPLoader, Transport } = await import(ESPTOOL_URL));
-      }
+      // Ask for the port first, while the click's user activation is still valid.
       port = await navigator.serial.requestPort();
+    } catch (error) {
+      log("No serial port selected" + (error?.name === "NotFoundError" ? "." : ": " + (error?.message || String(error))));
+      return;
+    }
+    connecting = true; connectButton.disabled = true;
+    try {
+      let esptool;
+      try { esptool = await loadEsptool(); }
+      catch (error) { throw new Error("Could not load esptool-js from " + ESPTOOL_URL + " (" + (error?.message || String(error)) + "). Check your network or content blockers."); }
+      const { ESPLoader, Transport } = esptool;
       transport = new Transport(port);
       loader = new ESPLoader({ transport, baudrate: 460800, terminal: terminal() });
       setResult("Connecting to bootloader…");
@@ -115,8 +134,11 @@ const ESPTOOL_URL = "https://unpkg.com/esptool-js@0.5.6/bundle.js";
     } catch (error) {
       log("Connection failed: " + (error?.message || String(error)));
       setResult("Could not connect. Try holding BOOT while connecting the board, then retry.", "error");
-      try { await transport?.disconnect(); } catch {}
+      try { if (transport) await transport.disconnect(); else await port?.close(); } catch {}
       transport = null; loader = null; port = null; setConnected(false);
+    } finally {
+      connecting = false;
+      setConnected(connected);
     }
   }
   async function disconnect() {

@@ -2,7 +2,7 @@ name: MissionLink
 options:
   minimumXcodeGenVersion: 2.38.0
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "16.7"
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -22,4 +22,4 @@ targets:
         PRODUCT_NAME: MissionLink
         INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription: "MissionLink uses Bluetooth to connect directly to your MissionLink radio and send local commands."
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.7"

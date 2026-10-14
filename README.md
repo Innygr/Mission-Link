@@ -61,6 +61,8 @@ Production encryption/key provisioning is not implemented yet. The planned ciphe
 
 ## Network model
 
+- **Implementation order:** mesh routing first, then direct P2P optimisation. See [mesh-first routing plan](docs/MESH_FIRST_ROUTING.md) and [mesh routing test plan](docs/MESH_ROUTING_TEST_PLAN.md).
+
 - **Direct node connection:** unicast to one node ID.
 - **Group channel:** group ID in the packet; group members decrypt with that group's key.
 - **Relay:** relays forward ciphertext based on routing metadata, without group keys.

@@ -25,6 +25,15 @@ Ownership above records the intended starting split; it does not assert that a t
 
 ## Handoff log
 
+### 2026-10-14 — Firmware status reporting
+- **Owner:** ChatGPT
+- **Status:** implemented in source; CI result not yet confirmed.
+- **Changed paths:** `src/main.cpp`, `docs/CLIENT_PROTOCOL.md`, `docs/TESTING_GUIDE.md`, `README.md`.
+- **Change:** the `status` command now reports the adapter's actual `radioReady`, `radioInitialized`, `radioReceiving`, and `radioState` values instead of hardcoding `radioReady:false`; docs clarify that guarded receive-to-router wiring exists but real RF/mesh delivery is unverified.
+- **Validation:** fetched changed files back from GitHub and inspected the updated status code and documentation. No local firmware build, native test run, or physical hardware test was performed in this environment.
+- **Next action:** inspect the firmware CI run and fix any compile/test failures before adding more behavior.
+
+
 Add newest entries at the top. Link to the commit, PR, or issue whenever possible.
 
 ### Initial coordination setup

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="description" content="MissionLink visual hardware bench tester for USB serial and BLE readiness.">
+  <link rel="icon" href="./assets/MissionLinkLogo.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./testbench.css">
+  <title>MissionLink Bench Test</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="MissionLink home"><img class="brand-logo" src="./assets/MissionLinkLogo.png" alt=""><span>MissionLink<small>HARDWARE TEST BENCH</small></span></a>
+    <nav class="top-nav"><a href="./flasher.html">Firmware flasher ↗</a></nav>
+    <div class="header-status"><span class="status-dot"></span><span id="connection-label">Not connected</span></div>
+  </header>
+  <main class="shell testbench-shell">
+    <section class="hero testbench-hero">
+      <div><p class="eyebrow">DEVICE TOOLS / DIAGNOSTICS <span class="pill">BENCH MODE</span></p><h1>Test your<br><em>MissionLink.</em></h1><p class="lede">A point-and-click test bench for USB serial diagnostics, node presets, and firmware response checks. No terminal required.</p></div>
+      <div class="flasher-chip" aria-hidden="true"><span>TEST / 01</span><i></i><i></i><i></i><i></i></div>
+    </section>
+    <section class="notice flasher-warning"><span class="notice-icon">!</span><div><strong>Bench tests only — radio stays off</strong><p>This page tests the current firmware scaffold over USB. It does not transmit LoRa messages or prove real mesh behavior. Do not enable RF. Use a supported desktop Chrome or Edge browser over HTTPS; iPhone/iPad Safari cannot use USB serial.</p></div></section>
+    <div class="testbench-grid">
+      <section class="panel testbench-panel">
+        <div class="panel-heading"><div><p class="eyebrow">01 / CONNECT</p><h2>Connect hardware</h2></div><span class="icon-chip">⌁</span></div>
+        <p class="muted">Connect the XIAO with a USB data cable. Close any other app using its serial port first.</p>
+        <div class="testbench-actions"><button id="connect" class="button button-primary">Connect USB device</button><button id="disconnect" class="button button-quiet" disabled>Disconnect</button></div>
+        <div id="device-status" class="testbench-status"><strong>Not connected</strong>Choose the device in the browser permission dialog.</div>
+        <div class="testbench-kpis"><span><b id="serial-state">●</b> USB serial</span><span><b id="rf-state">●</b> RF disabled expected</span></div>
+      </section>
+      <section class="panel testbench-panel">
+        <div class="panel-heading"><div><p class="eyebrow">02 / QUICK CHECK</p><h2>Run diagnostics</h2></div><span class="icon-chip">✓</span></div>
+        <p class="muted">Runs a short command/response checklist against the connected board. Commands are diagnostic only and do not send radio traffic.</p>
+        <button id="run-tests" class="button button-primary" disabled>Run USB test suite</button>
+        <button id="clear-results" class="button button-quiet">Clear results</button>
+        <div class="testbench-checks" id="test-results">
+          <div class="testbench-check pending"><span class="check-icon">○</span><div><strong>Waiting to test</strong><small>Connect your board and run the test suite.</small></div></div>
+        </div>
+      </section>
+      <section class="panel testbench-panel">
+        <div class="panel-heading"><div><p class="eyebrow">03 / PRESETS</p><h2>Node role</h2></div><span class="icon-chip">⌘</span></div>
+        <p class="muted">Change the firmware's in-memory routing policy. This does not turn on the radio and resets to Client after reboot.</p>
+        <label for="preset-select">Active preset</label>
+        <select id="preset-select" class="input">
+          <option value="client">Client — end device</option>
+          <option value="repeater">Repeater — relay policy</option>
+          <option value="gateway">Gateway — relay + local group delivery</option>
+        </select>
+        <div class="testbench-actions"><button id="apply-preset" class="button button-primary" disabled>Apply preset</button><button id="read-status" class="button button-quiet" disabled>Refresh status</button></div>
+        <p class="testbench-note muted">Presets currently exercise the RF-independent router logic only. No over-the-air forwarding is connected.</p>
+      </section>
+      <section class="panel testbench-panel">
+        <div class="panel-heading"><div><p class="eyebrow">04 / COMMANDS</p><h2>Send diagnostic command</h2></div><span class="icon-chip">↗</span></div>
+        <label for="command">Command</label>
+        <div class="testbench-command-row"><input id="command" maxlength="256" autocomplete="off" spellcheck="false" placeholder="status"><button id="send-command" class="button button-primary" disabled>Send</button></div>
+        <div class="testbench-actions"><button class="text-button" data-command="help">Help</button><button class="text-button" data-command="status">Status</button><button class="text-button" data-command="presets">Presets</button><button class="text-button" data-command="nodes">Nodes</button></div>
+        <p class="testbench-note muted">Commands such as send/group/join/leave are not implemented yet. This tool will display their not-ready response rather than pretending a message was sent.</p>
+      </section>
+    </div>
+    <section class="panel testbench-panel">
+      <div class="panel-heading"><div><p class="eyebrow">05 / LIVE OUTPUT</p><h2>Device event log</h2></div><button id="clear-log" class="text-button">Clear log</button></div>
+      <pre id="console-log" class="testbench-console" role="log" aria-live="polite">MissionLink Bench Test ready. Connect a board to begin.</pre>
+    </section>
+    <section class="notice"><span class="notice-icon">i</span><div><strong>What this page cannot test yet</strong><p>Native codec tests and firmware compilation run in GitHub Actions, not inside a browser. LoRa transmit/receive, encryption, node discovery, acknowledgements, and real mesh routing are not implemented in the radio path. The separate flasher installs firmware binaries; it does not build them.</p></div></section>
+    <footer><span>MISSIONLINK · VISUAL TEST BENCH</span><span>RF DISABLED IN CURRENT FIRMWARE</span></footer>
+  </main>
+  <script src="./testbench.js" defer></script>
+</body>
+</html>

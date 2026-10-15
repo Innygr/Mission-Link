@@ -45,6 +45,13 @@ test("accepts erased 0xFF padding after valid partition entries", () => {
   assert.deepEqual(parsed.errors, []);
   assert.equal(parsed.entries.length, 1);
 });
+test("rejects non-padding bytes in a truncated final entry", () => {
+  const truncated = new Uint8Array(40).fill(0xFF);
+  truncated.set(entry(0, 0x10000, 0x100000), 0);
+  truncated[39] = 0x00;
+  const parsed = parsePartitionTable(truncated);
+  assert.ok(parsed.errors.some(e => /truncated or malformed trailing entry/.test(e)));
+});
 
 import { createHash } from "node:crypto";
 import { md5BinaryString } from "../flasher-validate.js";

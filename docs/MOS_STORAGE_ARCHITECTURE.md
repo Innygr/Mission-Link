@@ -72,4 +72,6 @@ This is a proposed layout, not a format that current firmware reads. Key materia
 
 ## Current status
 
-The repository currently has a local host-side contact book, but the embedded firmware does not yet mount or use a TF/microSD card. LoRa transmission remains disabled. Do not present this document as implemented storage functionality.
+The firmware now stores the selected client/repeater/gateway preset in ESP32 NVS (internal flash) and restores it at boot. If NVS is unavailable, the firmware reports a warning and preset changes are runtime-only; a failed NVS write prevents changing the active preset. This is the first small internal-flash setting, not a complete OS settings service.
+
+The embedded firmware still does not mount or use a TF/microSD card. The repository also has a local host-side contact book, but it is not yet persisted on the device. LoRa transmission remains disabled. Do not present card storage or message persistence as implemented.

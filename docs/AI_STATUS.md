@@ -1,3 +1,15 @@
+### 2026-10-15 — Reusable in-process contact resolver
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `feat/contact-resolver-api`; CI pending.
+- **Changed paths:** `host/missionlink_contact_resolver.py`, `host/tests/test_missionlink_contact_resolver.py`, `docs/LOCAL_CONTACT_BOOK.md`.
+- **Implemented:** a `ContactResolver` protocol, client-facing `ResolvedContact` view model, `ContactBookResolver` adapter, and a helper that loads a contact-book snapshot from disk. Consumers can resolve addresses in-process without launching a subprocess or parsing the persistence schema.
+- **Tests added:** view-model mapping, valid-but-unknown address, invalid address handling, type guard, and explicit snapshot behavior.
+- **Validation:** tests committed but not yet run in CI; no physical hardware or RF test performed.
+- **Limits:** local lookup only; no live file watching, node discovery, key verification, message sending, or radio transport. RF remains disabled.
+- **Next:** run the full host/native/ESP32 CI workflow and fix any failures before proposing the change.
+
+---
+
 ### 2026-10-15 — Machine-readable contact lookup
 - **Owner:** ChatGPT
 - **Status:** committed on `feat/local-contact-book`; CI status for this latest change must be checked separately.

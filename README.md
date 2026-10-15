@@ -13,6 +13,7 @@ This is an actively developing scaffold, **not yet a validated radio firmware bu
 - **Web flasher:** [`web/flasher.html`](web/flasher.html) — flash CI-built binaries from a supported desktop Chromium browser; download the firmware artifact from [Firmware Builds](https://github.com/Innygr/Mission-Link/actions/workflows/firmware-ci.yml) after a successful build.
 - **Apple app:** `apple/MissionLink/` — SwiftUI + Core Bluetooth starter targeting iOS 16.7 and later. It uses the GATT UUIDs currently in `src/main.cpp`.
 - **Cross-platform host services:** [`docs/HOST_SERVICES.md`](docs/HOST_SERVICES.md), [`host/missionlink_services.py`](host/missionlink_services.py), and [`host/missionlink_gateway.py`](host/missionlink_gateway.py) — bounded service registry plus an experimental token-authenticated HTTP API restricted to loopback. It is a local control-plane API only, not a radio bridge or production service transport.
+- **Local Mesh Number contacts:** [`docs/LOCAL_CONTACT_BOOK.md`](docs/LOCAL_CONTACT_BOOK.md), [`host/missionlink_contacts.py`](host/missionlink_contacts.py), and [`host/missionlink_contact_resolver.py`](host/missionlink_contact_resolver.py) — local contact book plus an in-process resolver interface for GUI/gateway clients. Lookup is local only; it does not discover nodes, verify keys, or send messages.
 - **Architecture notes:** `docs/CLIENT_ARCHITECTURE.md`.
 - **Security and glyph transport design:** `docs/CIPHER_SUITES.md` (design proposal; not implemented in firmware yet).
 - **Shared command/event schema:** `docs/CLIENT_PROTOCOL.md`.

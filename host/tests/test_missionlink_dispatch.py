@@ -23,7 +23,7 @@ def make_dispatcher(*, acl=None, healthy=True, replay_limit=10):
     registry.register(ServiceRecord(
         service_id="weather.local", host_id="weather.node",
         display_name="Weather", capabilities=("weather.current",),
-        transports=("lan",), healthy=healthy, max_inline_request_bytes=96,
+        transports=("lan",), healthy=healthy, max_inline_request_bytes=32,
     ))
     dispatcher = ServiceDispatcher(
         registry, acl if acl is not None else {"client-1": frozenset({"weather.local"})},
@@ -98,7 +98,7 @@ class ServiceDispatcherTests(unittest.TestCase):
     def test_payload_and_response_size_are_bounded(self):
         dispatcher = make_dispatcher()
         with self.assertRaises(DispatchError) as caught:
-            dispatcher.dispatch(request(payload={"x": "a" * 100}), principal_id="client-1", now_ms=NOW)
+            dispatcher.dispatch(request(payload={"x": "a" * 40}), principal_id="client-1", now_ms=NOW)
         self.assertEqual(caught.exception.code, "too_large")
         dispatcher.register_handler("weather.local", "weather.current",
                                     lambda principal, payload: {"data": "x" * 200})
@@ -112,7 +112,7 @@ class ServiceDispatcherTests(unittest.TestCase):
         with self.assertRaises(DispatchError) as caught:
             dispatcher.dispatch(request(request_id="req-2"), principal_id="client-1", now_ms=NOW)
         self.assertEqual(caught.exception.code, "replay_cache_full")
-        dispatcher.dispatch(request(request_id="req-2"), principal_id="client-1", now_ms=NOW + 300_000)
+        dispatcher.dispatch(request(request_id="req-2", created_at_ms=NOW + 299_000, expires_at_ms=NOW + 310_000), principal_id="client-1", now_ms=NOW + 300_000)
         self.assertEqual(len(dispatcher._seen), 1)
 
     def test_handler_failures_do_not_leak_exception_details(self):

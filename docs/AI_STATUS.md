@@ -1,3 +1,13 @@
+### 2026-10-15 — Correct preset persistence detection
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI pending.
+- **Changed paths:** `src/main.cpp`.
+- **Fix:** ESP32 NVS reads with a default value can make an absent `preset` key look saved. Firmware now checks `isKey("preset")` before skipping writes and before reporting `presetPersisted:true`. This ensures choosing the default Client preset actually creates a saved record.
+- **Validation:** source-level review; CI pending and no physical hardware test.
+- **Next:** verify CI and continue storage implementation after board-specific SD wiring is known.
+
+---
+
 ### 2026-10-15 — Expose internal settings health
 - **Owner:** ChatGPT
 - **Status:** committed on `docs/mos-storage-layout`; CI triggered for this change.

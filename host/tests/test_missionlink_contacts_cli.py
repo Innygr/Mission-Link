@@ -27,6 +27,33 @@ class ContactBookCliTests(unittest.TestCase):
             self.assertIn("No contacts.", text)
             self.assertEqual(ContactBook.load(path).list_contacts(), ())
 
+    def test_find_matches_label_case_insensitively_and_mesh_number(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "contacts.json"
+            book = ContactBook()
+            book.upsert(Contact(NUMBER, "Vancouver relay", node_id="node_van"))
+            book.upsert(Contact("(777)-111-2222", "Mission gateway"))
+            book.save(path)
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(main(["--file", str(path), "find", "VANCOUVER"]), 0)
+            self.assertIn(NUMBER, output.getvalue())
+            self.assertIn("Vancouver relay", output.getvalue())
+            self.assertNotIn("Mission gateway", output.getvalue())
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(main(["--file", str(path), "find", "111-2222"]), 0)
+            self.assertIn("Mission gateway", output.getvalue())
+
+    def test_find_without_matches_returns_nonzero(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "contacts.json"
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                result = main(["--file", str(path), "find", "missing"])
+            self.assertEqual(result, 1)
+            self.assertIn("No matching contacts.", output.getvalue())
+
     def test_invalid_contact_is_reported_without_writing(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "contacts.json"

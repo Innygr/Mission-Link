@@ -45,6 +45,10 @@ void test_mesh_broadcast_delivers_at_hop_limit(){ ml::MeshRouter r; auto p=makeP
 void test_mesh_rejects_zero_source_and_message_id(){ ml::MeshRouter r; auto p=makePacket(); memset(p.source,0,8); ml::Packet f;
  TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,10,f)); p=makePacket(); memset(p.messageId,0,8);
  TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,10,f)); }
+void test_mesh_rejects_group_without_group_id(){ ml::MeshRouter r; auto p=makePacket(ml::AddressMode::Group); memset(p.destination,0,8); ml::Packet f;
+ TEST_ASSERT_EQUAL((int)ml::MeshAction::DropInvalid,(int)r.process(p,B,10,f)); }
+void test_mesh_allows_broadcast_without_destination_id(){ ml::MeshRouter r; auto p=makePacket(ml::AddressMode::Broadcast); memset(p.destination,0,8); ml::Packet f;
+ TEST_ASSERT_EQUAL((int)ml::MeshAction::DeliverLocal,(int)r.process(p,B,10,f)); }
 void test_mesh_global_rate_limit(){ ml::MeshRouter r(ml::NodePreset::Repeater); ml::Packet f;
  for(uint8_t i=1;i<=ml::MeshRouter::MAX_FORWARDS_PER_WINDOW;++i){auto p=makePacket();p.messageId[7]=i;p.source[7]=i;
  TEST_ASSERT_EQUAL((int)ml::MeshAction::ForwardOnly,(int)r.process(p,B,100,f));}

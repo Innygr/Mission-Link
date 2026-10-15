@@ -1,3 +1,16 @@
+### 2026-10-15 — Python USB serial control client
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `feat/serial-control-client`; CI pending.
+- **Changed paths:** `host/missionlink_serial_client.py`, `host/tests/test_missionlink_serial_client.py`, `docs/CLIENT_PROTOCOL.md`, `README.md`.
+- **Implemented:** a small synchronous host client for the firmware's existing newline-delimited JSON control protocol. It supports help/status/nodes/presets/preset selection, matches responses while skipping unsolicited events, bounds commands and response events, validates JSON event shapes, detects short writes, and applies a timeout. PySerial is imported lazily so unit tests do not require hardware or that dependency.
+- **Tests added:** unsolicited event handling, current discovery-not-ready result, preset validation, firmware errors, unsupported commands, command framing/size, malformed/oversized events, short writes, close behavior, and timeout.
+- **Validation:** tests added; GitHub Actions pending. No physical board/serial-port test performed.
+- **Limits:** diagnostics/control only. It intentionally rejects send/group/join/leave because firmware reports them as not ready; no messaging, encryption, node discovery, RF enablement, or transport claims.
+- **Next:** verify CI and consider a framed request-ID protocol before any future asynchronous multi-client gateway.
+- **Coordination:** this change touches host protocol code and docs only; does not edit the web flasher files owned by Claude.
+
+---
+
 ### 2026-10-15 — Machine-readable contact lookup
 - **Owner:** ChatGPT
 - **Status:** committed on `feat/local-contact-book`; CI status for this latest change must be checked separately.

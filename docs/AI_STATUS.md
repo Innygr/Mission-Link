@@ -4,7 +4,7 @@
 - **Task:** advance Issue #10 from envelope encoding toward safe service dispatch.
 - **Changed paths:** `host/missionlink_dispatch.py`, `host/tests/test_missionlink_dispatch.py`, `docs/SERVICE_DISPATCH.md`.
 - **Implemented:** explicit service/operation handler allowlist; per-principal service ACL; expired and implausibly future-dated request rejection; unhealthy/missing service rejection; request payload size enforcement; bounded, process-local replay cache reserved before handler invocation; correlated, bounded response envelopes; stable dispatch error codes.
-- **Validation:** source and tests are committed on the feature branch. CI has not yet run for this branch. No live network listener, peer authentication, encryption, radio routing, or physical hardware test was added.
+- **Validation:** first CI run executed 24 host tests and exposed two test-fixture issues (an oversized request fixture failed during envelope encoding, and the replay-pruning fixture reused an expired request). Both fixtures have been corrected on this branch; awaiting a fresh CI run. Native firmware tests passed in that run. No live network listener, peer authentication, encryption, radio routing, or physical hardware test was added.
 - **Security boundary:** `principal_id` must come from an adapter that has already authenticated the peer. The ACL and in-memory replay cache are policy controls, not cryptographic authentication or persistent replay protection. Do not expose the dispatcher directly to an untrusted network.
 - **Next:** review CI, correct any regressions, and then design an authenticated local gateway adapter separately.
 

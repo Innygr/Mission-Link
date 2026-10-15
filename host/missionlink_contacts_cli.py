@@ -92,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             for contact in matches:
                 suffix = f" [node: {contact.node_id}]" if contact.node_id else ""
-                print(f"{contact.mesh_number}\\t{contact.label}{suffix}")
+                print(f"{contact.mesh_number}\t{contact.label}{suffix}")
             return 0
 
         if args.command == "list":

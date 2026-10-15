@@ -1,10 +1,10 @@
 ### 2026-10-15 — Fail-closed host service dispatch policy
 - **Owner:** ChatGPT
-- **Status:** implementation committed on `feat/service-dispatch-policy`; PR not yet opened at the time of this entry.
+- **Status:** implementation committed on `feat/service-dispatch-policy`; [PR #13](https://github.com/Innygr/Mission-Link/pull/13) open, stacked on PR #12.
 - **Task:** advance Issue #10 from envelope encoding toward safe service dispatch.
 - **Changed paths:** `host/missionlink_dispatch.py`, `host/tests/test_missionlink_dispatch.py`, `docs/SERVICE_DISPATCH.md`.
 - **Implemented:** explicit service/operation handler allowlist; per-principal service ACL; expired and implausibly future-dated request rejection; unhealthy/missing service rejection; request payload size enforcement; bounded, process-local replay cache reserved before handler invocation; correlated, bounded response envelopes; stable dispatch error codes.
-- **Validation:** first CI run executed 24 host tests and exposed two test-fixture issues (an oversized request fixture failed during envelope encoding, and the replay-pruning fixture reused an expired request). Both fixtures have been corrected on this branch; awaiting a fresh CI run. Native firmware tests passed in that run. No live network listener, peer authentication, encryption, radio routing, or physical hardware test was added.
+- **Validation:** the initial run exposed two test-fixture issues (oversized request fixture and expired replay-pruning fixture); both were corrected. Latest GitHub Actions run passed native packet/mesh tests, the full host suite, ESP32-S3 build, flash-set staging/validation, and artifact upload. No physical hardware or over-the-air test was performed.
 - **Security boundary:** `principal_id` must come from an adapter that has already authenticated the peer. The ACL and in-memory replay cache are policy controls, not cryptographic authentication or persistent replay protection. Do not expose the dispatcher directly to an untrusted network.
 - **Next:** review CI, correct any regressions, and then design an authenticated local gateway adapter separately.
 

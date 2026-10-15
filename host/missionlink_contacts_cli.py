@@ -82,7 +82,10 @@ def main(argv: list[str] | None = None) -> int:
 
         book = _load(args.file)
         if args.command == "find":
-            query = args.query.casefold()
+            query = args.query.strip().casefold()
+            if not query:
+                print("Search query must not be empty.", file=sys.stderr)
+                return 2
             matches = [
                 contact for contact in book.list_contacts()
                 if query in contact.mesh_number.casefold() or query in contact.label.casefold()

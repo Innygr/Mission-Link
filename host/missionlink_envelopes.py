@@ -85,13 +85,13 @@ class ServiceEnvelope:
     def to_bytes(self) -> bytes:
         self.validate()
         obj: dict[str, Any] = {
-            "v": SCHEMA_VERSION, "kind": self.kind, "requestId": self.request_id,
-            "serviceId": self.service_id, "operation": self.operation,
-            "createdAtMs": self.created_at_ms, "expiresAtMs": self.expires_at_ms,
-            "payload": self.payload,
+            "v": SCHEMA_VERSION, "k": self.kind, "rid": self.request_id,
+            "sid": self.service_id, "op": self.operation,
+            "t": self.created_at_ms, "x": self.expires_at_ms,
+            "p": self.payload,
         }
         if self.error_code is not None:
-            obj["errorCode"] = self.error_code
+            obj["e"] = self.error_code
         try:
             raw = json.dumps(obj, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
         except (TypeError, ValueError, UnicodeError) as exc:
@@ -111,16 +111,16 @@ class ServiceEnvelope:
             raise EnvelopeError("invalid_json") from exc
         if not isinstance(obj, dict):
             raise EnvelopeError("envelope_must_be_object")
-        allowed = {"v", "kind", "requestId", "serviceId", "operation", "createdAtMs", "expiresAtMs", "payload", "errorCode"}
-        required = allowed - {"errorCode"}
+        allowed = {"v", "k", "rid", "sid", "op", "t", "x", "p", "e"}
+        required = allowed - {"e"}
         if set(obj) - allowed or not required.issubset(obj):
             raise EnvelopeError("invalid_fields")
         if type(obj["v"]) is not int or obj["v"] != SCHEMA_VERSION:
             raise EnvelopeError("unsupported_version")
         envelope = cls(
-            kind=obj["kind"], request_id=obj["requestId"], service_id=obj["serviceId"],
-            operation=obj["operation"], created_at_ms=obj["createdAtMs"],
-            expires_at_ms=obj["expiresAtMs"], payload=obj["payload"], error_code=obj.get("errorCode"),
+            kind=obj["k"], request_id=obj["rid"], service_id=obj["sid"],
+            operation=obj["op"], created_at_ms=obj["t"],
+            expires_at_ms=obj["x"], payload=obj["p"], error_code=obj.get("e"),
         )
         envelope.validate()
         return envelope

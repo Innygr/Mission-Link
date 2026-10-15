@@ -102,13 +102,13 @@ class MissionLinkSerialClient:
         if not isinstance(command, str):
             raise TypeError("command_must_be_string")
         command = command.strip()
-        expected_type = _expected_response(command)
         try:
             encoded = command.encode("utf-8", errors="strict")
         except UnicodeError as exc:
             raise ValueError("invalid_command_encoding") from exc
         if not encoded or len(encoded) > MAX_COMMAND_BYTES or b"\n" in encoded or b"\r" in encoded:
             raise ValueError("invalid_command_length_or_framing")
+        expected_type = _expected_response(command)
 
         written = self._port.write(encoded + b"\n")
         if written != len(encoded) + 1:

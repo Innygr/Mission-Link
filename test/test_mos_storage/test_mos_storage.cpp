@@ -23,6 +23,8 @@ void test_safe_relative_paths() {
   TEST_ASSERT_FALSE(mos::isSafeRelativePath(nullptr));
   TEST_ASSERT_FALSE(mos::isSafeRelativePath(""));
   TEST_ASSERT_FALSE(mos::isSafeRelativePath("/mos/contacts.json"));
+  TEST_ASSERT_FALSE(mos::isSafeRelativePath("."));
+  TEST_ASSERT_FALSE(mos::isSafeRelativePath("assets/."));
   TEST_ASSERT_FALSE(mos::isSafeRelativePath("../contacts.json"));
   TEST_ASSERT_FALSE(mos::isSafeRelativePath("contacts/../secrets.json"));
   TEST_ASSERT_FALSE(mos::isSafeRelativePath("contacts//contacts.json"));

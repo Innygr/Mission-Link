@@ -19,6 +19,7 @@ Run commands from the repository root. The default file is `~/.local/share/missi
 
 ```sh
 python -m host.missionlink_contacts_cli list
+python -m host.missionlink_contacts_cli find Vancouver
 python -m host.missionlink_contacts_cli add '(777)-482-1937' 'Vancouver relay' --node-id node_van
 python -m host.missionlink_contacts_cli rename '(777)-482-1937' 'Downtown relay'
 python -m host.missionlink_contacts_cli remove '(777)-482-1937'

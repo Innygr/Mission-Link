@@ -65,12 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "export":
             book = _load(args.file)
-            args.destination.parent.mkdir(parents=True, exist_ok=True)
-            args.destination.write_bytes(book.to_bytes())
-            try:
-                os.chmod(args.destination, 0o600)
-            except OSError:
-                pass
+            _save(book, args.destination)
             print(f"Exported {len(book)} contact(s) to {args.destination}")
             return 0
 

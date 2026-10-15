@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
+#include <Preferences.h>
 #include <esp_mac.h>
 #include "missionlink_config.h"
 #include "mesh_router.h"
@@ -16,6 +17,8 @@ static bool discardUntilNewline = false;
 static ml::NodePreset activePreset = ml::NodePreset::Client;
 static ml::MeshRouter meshRouter(activePreset);
 static ml::MissionLinkRadio radioLink;
+static Preferences settingsStore;
+static bool settingsStoreReady = false;
 static uint8_t localNodeId[8] = {0};
 
 static void report(const String& jsonLine) {
@@ -95,11 +98,24 @@ static void dispatchCommand(String cmd) {
       reportError("invalid_preset", "Use preset client, preset repeater, or preset gateway.");
       return;
     }
+    // Persist this small preference in ESP32 NVS (internal flash), not the TF card.
+    // If NVS is unavailable, allow a runtime-only change and report that explicitly.
+    bool persisted = false;
+    if (settingsStoreReady) {
+      const size_t written = settingsStore.putString("preset", ml::presetName(parsed));
+      if (written != strlen(ml::presetName(parsed))) {
+        reportError("settings_write_failed", "Preset was not changed because internal-flash persistence failed.");
+        return;
+      }
+      persisted = true;
+    }
     activePreset = parsed;
     meshRouter.setPreset(activePreset);
     String out = "{\"type\":\"preset\",\"active\":\"";
     out += ml::presetName(activePreset);
-    out += "\"}";
+    out += "\",\"persisted\":";
+    out += persisted ? "true" : "false";
+    out += "}";
     report(out);
   } else if (cmd == "status") {
     const ml::RadioStatus radioStatus = radioLink.status();
@@ -155,6 +171,21 @@ void setup() {
   Serial.println();
   Serial.println("{\"type\":\"boot\",\"firmware\":\"0.2.1\",\"rfEnabled\":false}");
   Serial.println("{\"type\":\"hint\",\"message\":\"Send help for commands. RF is deliberately disabled.\"}");
+
+  // Preferences uses internal ESP32 NVS flash and does not depend on TF/microSD.
+  settingsStoreReady = settingsStore.begin("missionlink", false);
+  if (settingsStoreReady) {
+    const String savedPreset = settingsStore.getString("preset", "client");
+    ml::NodePreset restored;
+    if (ml::parsePreset(savedPreset.c_str(), restored)) {
+      activePreset = restored;
+      meshRouter.setPreset(activePreset);
+    } else {
+      Serial.println("{\"type\":\"warning\",\"code\":\"invalid_saved_preset\",\"message\":\"Using client preset; saved value is invalid.\"}");
+    }
+  } else {
+    Serial.println("{\"type\":\"warning\",\"code\":\"settings_unavailable\",\"message\":\"Internal-flash settings unavailable; preset changes will be runtime-only.\"}");
+  }
 
   uint8_t mac[6] = {0};
   if (esp_read_mac(mac, ESP_MAC_WIFI_STA) == ESP_OK) {

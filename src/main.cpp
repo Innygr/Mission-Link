@@ -106,7 +106,7 @@ static void dispatchCommand(String cmd) {
       const char* requestedPreset = ml::presetName(parsed);
       const String savedPreset = settingsStore.getString("preset", "client");
       // Avoid unnecessary NVS writes (flash wear) when the selection is unchanged.
-      if (savedPreset != requestedPreset) {
+      if (!settingsStore.isKey("preset") || savedPreset != requestedPreset) {
         const size_t written = settingsStore.putString("preset", requestedPreset);
         if (written != strlen(requestedPreset)) {
           reportError("settings_write_failed", "Preset was not changed because internal-flash persistence failed.");
@@ -139,7 +139,7 @@ static void dispatchCommand(String cmd) {
     out += radioStateName(radioStatus.state);
     out += "\",\"settingsReady\":";
     out += settingsStoreReady ? "true" : "false";
-    const bool presetPersisted = settingsStoreReady &&
+    const bool presetPersisted = settingsStoreReady && settingsStore.isKey("preset") &&
         settingsStore.getString("preset", "client") == ml::presetName(activePreset);
     out += ",\"presetPersisted\":";
     out += presetPersisted ? "true" : "false";

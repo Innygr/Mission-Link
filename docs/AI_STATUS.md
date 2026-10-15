@@ -1,3 +1,13 @@
+### 2026-10-15 — Document persistent preset response
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI is running for the branch head.
+- **Changed paths:** `docs/CLIENT_PROTOCOL.md`.
+- **Implemented:** protocol docs now describe NVS-backed preset restore, runtime-only fallback, write-failure behavior, and the `persisted` response field.
+- **Validation:** documentation reviewed against current firmware source; no physical device test.
+- **Next action:** confirm the ESP32-S3 build and native tests on the final PR head.
+
+---
+
 ### 2026-10-15 — Persist node preset in internal flash
 - **Owner:** ChatGPT
 - **Status:** implementation committed on `docs/mos-storage-layout`; CI not yet verified for this change.

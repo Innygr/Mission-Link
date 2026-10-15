@@ -52,8 +52,9 @@ def _loopback_address(host: str) -> str:
     except ValueError as exc:
         # Do not rely on hostname resolution for a security boundary.
         raise GatewayConfigurationError("bind_must_be_loopback_ip_literal") from exc
-    if not address.is_loopback:
-        raise GatewayConfigurationError("bind_must_be_loopback")
+    # ThreadingHTTPServer uses IPv4 by default; reject IPv6 instead of failing at startup.
+    if address.version != 4 or not address.is_loopback:
+        raise GatewayConfigurationError("bind_must_be_ipv4_loopback")
     return str(address)
 
 

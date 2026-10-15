@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 #include <Preferences.h>
+#include <cstring>
 #include <esp_mac.h>
 #include "missionlink_config.h"
 #include "mesh_router.h"

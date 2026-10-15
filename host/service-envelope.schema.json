@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://innygr.github.io/Mission-Link/schemas/service-envelope-v1.json",
+  "title": "MissionLink Service Envelope v1",
+  "description": "Bounded request/response/error envelope. Runtime code additionally enforces a 180-byte encoded limit, a five-minute lifetime, and payload depth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "v",
+    "kind",
+    "requestId",
+    "serviceId",
+    "operation",
+    "createdAtMs",
+    "expiresAtMs",
+    "payload"
+  ],
+  "properties": {
+    "v": { "const": 1 },
+    "kind": { "enum": ["request", "response", "error"] },
+    "requestId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,48}$" },
+    "serviceId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "operation": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "createdAtMs": { "type": "integer", "minimum": 0 },
+    "expiresAtMs": { "type": "integer", "minimum": 0 },
+    "payload": { "type": "object" },
+    "errorCode": {
+      "enum": ["bad_request", "forbidden", "not_found", "unavailable", "too_large", "expired", "internal"]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "error" } }, "required": ["kind"] },
+      "then": { "required": ["errorCode"] },
+      "else": { "not": { "required": ["errorCode"] } }
+    }
+  ]
+}

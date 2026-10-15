@@ -103,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "rename":
             book.rename(args.mesh_number, args.label)
             _save(book, args.file)
-            print(f"Renamed {args.mesh_number}")
+            print(f"Renamed {args.mesh_number} to {args.label}")
             return 0
 
         if args.command == "remove":

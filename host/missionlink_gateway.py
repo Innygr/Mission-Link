@@ -184,7 +184,7 @@ def make_handler(registry: ServiceRegistry, bearer_token: str, store: RegistrySt
                     registry.register(record)
                     if store is not None:
                         store.save(registry)
-                except (RegistryError, RegistryStoreError):
+                except (RegistryError, RegistryStoreError, OSError):
                     if previous is None:
                         registry.unregister(record.service_id)
                     else:
@@ -212,7 +212,7 @@ def make_handler(registry: ServiceRegistry, bearer_token: str, store: RegistrySt
                 try:
                     if store is not None:
                         store.save(registry)
-                except RegistryStoreError:
+                except (RegistryStoreError, OSError):
                     registry.register(previous)
                     self._send(500, {"ok": False, "error": "registry_persistence_failed"})
                     return

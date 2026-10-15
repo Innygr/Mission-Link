@@ -43,6 +43,15 @@ class SerialClientTests(unittest.TestCase):
         self.assertEqual(client.status()["type"], "status")
         self.assertEqual(port.writes, [b"status\n"])
 
+    def test_partial_serial_reads_are_reassembled(self):
+        port = FakeSerial([
+            b'{"type":"sta',
+            b'tus","rfEnabled":false}',
+            b"\n",
+        ])
+        result = MissionLinkSerialClient(port).status()
+        self.assertFalse(result["rfEnabled"])
+
     def test_nodes_returns_not_ready_diagnostic_without_claiming_discovery(self):
         port = FakeSerial([event({
             "type": "nodes", "items": [], "ready": False,

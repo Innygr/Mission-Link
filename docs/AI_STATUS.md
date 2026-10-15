@@ -1,3 +1,14 @@
+### 2026-10-15 — Persist node preset in internal flash
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `docs/mos-storage-layout`; CI not yet verified for this change.
+- **Changed paths:** `src/main.cpp`, `docs/MOS_STORAGE_ARCHITECTURE.md`.
+- **Implemented:** firmware uses ESP32 `Preferences`/NVS to restore the selected client/repeater/gateway preset at boot and persist future changes. The preset response reports whether it was persisted. If NVS cannot initialize, preset changes are runtime-only with a warning; a failed write prevents applying the new preset.
+- **Validation:** source-level review only so far. ESP32-S3 compilation and firmware tests must be checked in GitHub Actions; no physical board test performed.
+- **Limits:** only this small setting is persisted internally. No TF/microSD driver, contact/message storage, or key storage is implemented. RF remains disabled.
+- **Next action:** verify ESP32-S3 CI; then implement card support only after the exact round-display model and SD wiring are confirmed.
+
+---
+
 ### 2026-10-15 — mOS internal-flash and TF/microSD storage architecture
 - **Owner:** ChatGPT
 - **Status:** design note committed on `docs/mos-storage-layout`; implementation not yet started.

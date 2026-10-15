@@ -51,7 +51,7 @@ class ServiceEnvelopeTests(unittest.TestCase):
         base = json.loads(envelope().to_bytes())
         for mutate in (
             lambda obj: obj.update(extra=True), lambda obj: obj.update(v=2),
-            lambda obj: obj.update(expiresAtMs="later"),
+            lambda obj: obj.update(x="later"),
         ):
             obj = dict(base)
             mutate(obj)

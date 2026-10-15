@@ -1,3 +1,11 @@
+### 2026-10-15 — Gateway authorization regression coverage
+- **Owner:** ChatGPT
+- **Status:** additional tests committed on `feat/loopback-gateway-api`; CI rerun pending.
+- **Changed paths:** `host/tests/test_missionlink_gateway.py`.
+- **Added coverage:** missing bearer token on dispatch, authenticated principal without service ACL, malformed envelope, expired request, and duplicate request replay.
+- **Validation:** earlier CI run passed the native packet/mesh tests and complete host suite with the initial gateway tests. The new regression tests have not yet been validated by CI.
+- **Limits unchanged:** experimental loopback-only host API; no LAN/Internet listener, TLS, durable replay cache, radio bridge, or hardware/OTA test. RF remains disabled.
+
 ### 2026-10-15 — Loopback-only local gateway API
 - **Owner:** ChatGPT
 - **Status:** implementation committed on `feat/loopback-gateway-api`; awaiting CI and review. Stacked on PR #13, which is itself stacked on PR #12.

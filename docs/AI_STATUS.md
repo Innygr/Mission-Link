@@ -23,12 +23,12 @@
 
 ### 2026-10-14 — Bounded service request/response envelopes
 - **Owner:** ChatGPT
-- **Status:** implementation committed on a feature branch; PR #12 open; CI not yet verified.
+- **Status:** implementation committed on a feature branch; PR #12 open; first CI run found an oversized error envelope, fixed with compact wire keys; rerun pending.
 - **Task:** advance Issue #10's service protocol groundwork.
 - **PR:** https://github.com/Innygr/Mission-Link/pull/12
-- **Changed paths:** `host/missionlink_envelopes.py`, `host/tests/test_missionlink_envelopes.py`, `docs/SERVICE_ENVELOPES.md`
-- **Implemented:** version-1 request/response/error envelope codec; strict identifier and timestamp bounds; five-minute maximum lifetime; bounded JSON payload depth; allowlisted error codes; rejection of unknown fields and unsupported versions; 180-byte encoded envelope ceiling; unit tests and protocol notes.
-- **Validation:** files fetched back from the feature branch and inspected. Tests have not been run in this session; GitHub Actions should validate the host suite. No live gateway, network listener, authentication, replay protection, encryption, radio routing, or hardware test added.
+- **Changed paths:** `host/missionlink_envelopes.py`, `host/tests/test_missionlink_envelopes.py`, `host/service-envelope.schema.json`, `docs/SERVICE_ENVELOPES.md`
+- **Implemented:** version-1 request/response/error envelope codec with compact wire keys; strict identifier and timestamp bounds; five-minute maximum lifetime; bounded JSON payload depth; allowlisted error codes; rejection of unknown fields and unsupported versions; 180-byte encoded envelope ceiling; JSON Schema and unit tests.
+- **Validation:** first GitHub Actions run caught one failing test because the verbose error-envelope fields exceeded 180 bytes; compact wire keys now reduce overhead, and the test has been updated. Awaiting CI rerun to verify the fix. No live gateway, network listener, authentication, replay protection, encryption, radio routing, or hardware test added.
 - **Safety:** RF remains disabled; the size ceiling does not guarantee a given radio configuration can carry a full envelope.
 - **Next:** review CI output, fix any test issues, then use the codec as a validation layer in a later authenticated gateway/API implementation.
 

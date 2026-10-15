@@ -1,5 +1,6 @@
 import contextlib
 import io
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -26,6 +27,35 @@ class ContactBookCliTests(unittest.TestCase):
             self.assertIn("Vancouver relay", text)
             self.assertIn("No contacts.", text)
             self.assertEqual(ContactBook.load(path).list_contacts(), ())
+
+    def test_show_outputs_machine_readable_contact_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "contacts.json"
+            book = ContactBook()
+            book.upsert(Contact(NUMBER, "Vancouver relay", node_id="node_van", last_seen_ms=1234))
+            book.save(path)
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                result = main(["--file", str(path), "show", NUMBER])
+            self.assertEqual(result, 0)
+            self.assertEqual(json.loads(output.getvalue()), {
+                "mesh_number": NUMBER,
+                "label": "Vancouver relay",
+                "node_id": "node_van",
+                "public_key_fingerprint": None,
+                "last_seen_ms": 1234,
+            })
+
+    def test_show_missing_contact_returns_nonzero_without_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "contacts.json"
+            output = io.StringIO()
+            errors = io.StringIO()
+            with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+                result = main(["--file", str(path), "show", NUMBER])
+            self.assertEqual(result, 1)
+            self.assertEqual(output.getvalue(), "")
+            self.assertIn("Contact not found.", errors.getvalue())
 
     def test_find_matches_label_case_insensitively_and_mesh_number(self):
         with tempfile.TemporaryDirectory() as directory:

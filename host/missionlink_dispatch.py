@@ -17,7 +17,6 @@ from host.missionlink_envelopes import (
     is_expired,
 )
 from host.missionlink_services import (
-    RegistryError,
     ServiceRecord,
     ServiceRegistry,
 )

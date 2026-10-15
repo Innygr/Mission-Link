@@ -1,3 +1,14 @@
+### 2026-10-15 — Expose internal settings health
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI triggered for this change.
+- **Changed paths:** `src/main.cpp`, `docs/CLIENT_PROTOCOL.md`.
+- **Implemented:** `status` now includes `settingsReady` (whether NVS initialized) and `presetPersisted` (whether the active preset matches the saved value), so a client can diagnose flash-setting persistence without trying a write.
+- **Validation:** source and protocol example updated together; awaiting ESP32-S3 CI. No physical board test.
+- **Limits:** reports NVS/preset status only; it does not claim TF/microSD or contact/message storage is available. RF remains disabled.
+- **Next:** confirm CI, then continue with storage work only where hardware details are verified.
+
+---
+
 ### 2026-10-15 — Document persistent preset response
 - **Owner:** ChatGPT
 - **Status:** committed on `docs/mos-storage-layout`; CI is running for the branch head.

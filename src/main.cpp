@@ -103,10 +103,15 @@ static void dispatchCommand(String cmd) {
     // If NVS is unavailable, allow a runtime-only change and report that explicitly.
     bool persisted = false;
     if (settingsStoreReady) {
-      const size_t written = settingsStore.putString("preset", ml::presetName(parsed));
-      if (written != strlen(ml::presetName(parsed))) {
-        reportError("settings_write_failed", "Preset was not changed because internal-flash persistence failed.");
-        return;
+      const char* requestedPreset = ml::presetName(parsed);
+      const String savedPreset = settingsStore.getString("preset", "client");
+      // Avoid unnecessary NVS writes (flash wear) when the selection is unchanged.
+      if (savedPreset != requestedPreset) {
+        const size_t written = settingsStore.putString("preset", requestedPreset);
+        if (written != strlen(requestedPreset)) {
+          reportError("settings_write_failed", "Preset was not changed because internal-flash persistence failed.");
+          return;
+        }
       }
       persisted = true;
     }

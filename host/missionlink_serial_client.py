@@ -8,6 +8,7 @@ can be tested without hardware or third-party packages.
 from __future__ import annotations
 
 import json
+import math
 import time
 from typing import Any, Protocol
 
@@ -74,11 +75,19 @@ class MissionLinkSerialClient:
     ) -> None:
         if not callable(getattr(port, "write", None)) or not callable(getattr(port, "readline", None)):
             raise TypeError("port_must_support_write_and_readline")
-        if isinstance(timeout_seconds, bool) or not isinstance(timeout_seconds, (int, float)) or timeout_seconds <= 0:
+        if isinstance(timeout_seconds, bool) or not isinstance(timeout_seconds, (int, float)) or not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
             raise ValueError("invalid_timeout")
         if isinstance(max_event_bytes, bool) or not isinstance(max_event_bytes, int) or not 2 <= max_event_bytes <= MAX_EVENT_BYTES:
             raise ValueError("invalid_event_limit")
         self._port = port
+        # Keep each readline bounded so a port timeout cannot indefinitely
+        # overrun the overall response deadline.
+        port_timeout = getattr(port, "timeout", None)
+        if port_timeout is not None:
+            try:
+                port.timeout = min(float(port_timeout), 0.25)
+            except (AttributeError, TypeError, ValueError):
+                pass
         self._timeout_seconds = float(timeout_seconds)
         self._max_event_bytes = max_event_bytes
 

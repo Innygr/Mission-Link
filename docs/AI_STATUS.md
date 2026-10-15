@@ -1,3 +1,14 @@
+### 2026-10-15 — Add hardware-independent mOS storage guards
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `docs/mos-storage-layout`; CI pending.
+- **Changed paths:** `include/mos_storage.h`, `src/mos_storage.cpp`, `test/test_mos_storage/test_mos_storage.cpp`, `platformio.ini`, `docs/MOS_STORAGE_ARCHITECTURE.md`.
+- **Implemented:** a portable removable-storage state classifier (`absent` vs `ready` vs `error`), strict relative-path validation (including traversal and length bounds), and a size-limit helper. Added native tests and included the new source in the native PlatformIO test build.
+- **Validation:** tests are committed but CI has not yet run on this new head. No filesystem mount, TF-card I/O, contact/message persistence, or physical-board test is claimed.
+- **Safety/limits:** no SD pins or card interface guessed; no auto-formatting; RF remains disabled.
+- **Next:** verify CI; once the round-display model and SD wiring are known, add the hardware mount adapter and then bounded contact persistence.
+
+---
+
 ### 2026-10-15 — Correct preset persistence detection
 - **Owner:** ChatGPT
 - **Status:** committed on `docs/mos-storage-layout`; CI pending.

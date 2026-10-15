@@ -13,6 +13,21 @@ Each contact contains:
 
 The module does not assign Mesh Numbers, discover nodes, verify keys, or send messages. A future enrollment/registry process must prevent address collisions across regions. Contacts are sorted by Mesh Number when serialized.
 
+## Command-line tool
+
+Run commands from the repository root. The default file is `~/.local/share/missionlink/contacts.json`; pass `--file PATH` before the command to use another file.
+
+```sh
+python -m host.missionlink_contacts_cli list
+python -m host.missionlink_contacts_cli add '(777)-482-1937' 'Vancouver relay' --node-id node_van
+python -m host.missionlink_contacts_cli rename '(777)-482-1937' 'Downtown relay'
+python -m host.missionlink_contacts_cli remove '(777)-482-1937'
+python -m host.missionlink_contacts_cli export ./contacts-backup.json
+python -m host.missionlink_contacts_cli --file ./contacts.json import ./contacts-backup.json --replace
+```
+
+Import replaces the target contact book and therefore requires the explicit `--replace` flag. Imported JSON is validated against the strict schema before it is saved. The CLI creates parent directories as needed and attempts to set the contact file to owner-only permissions on platforms that support POSIX permissions. Keep backups secure; labels and Mesh Numbers may reveal information about your network.
+
 ## Python use
 
 ```python
@@ -23,7 +38,7 @@ contacts.upsert(Contact("(777)-482-1937", "Vancouver relay", node_id="node_van")
 contacts.save("contacts.json")
 ```
 
-The destination directory must already exist. Writes use a temporary file in the same directory followed by an atomic replacement. The application is responsible for OS file permissions and backups; this module does not encrypt the contact file.
+The library's destination directory must already exist. Writes use a temporary file in the same directory followed by an atomic replacement. The library does not encrypt the contact file.
 
 ## Safety and limits
 
@@ -31,7 +46,7 @@ The destination directory must already exist. Writes use a temporary file in the
 - Unknown fields and unsupported schema versions are rejected rather than silently discarded.
 - Duplicate Mesh Numbers are rejected on import.
 - The file contains no bearer tokens, private keys, or secret credentials.
-- No GUI, contact synchronization, import/export UI, network discovery, key verification, or radio transport is included.
+- No GUI, contact synchronization, network discovery, key verification, or radio transport is included.
 
 Run tests with:
 

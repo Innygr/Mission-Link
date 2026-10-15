@@ -81,15 +81,16 @@ class MissionLinkSerialClient:
             raise ValueError("invalid_event_limit")
         self._port = port
         # Keep each readline bounded so a port timeout cannot indefinitely
-        # overrun the overall response deadline.
-        port_timeout = getattr(port, "timeout", None)
-        if port_timeout is not None:
+        # overrun the overall response deadline. None means blocking forever.
+        if hasattr(port, "timeout"):
+            port_timeout = getattr(port, "timeout", None)
             try:
-                port.timeout = min(float(port_timeout), 0.25)
+                port.timeout = 0.25 if port_timeout is None else min(float(port_timeout), 0.25)
             except (AttributeError, TypeError, ValueError):
                 pass
         self._timeout_seconds = float(timeout_seconds)
         self._max_event_bytes = max_event_bytes
+        self._pending = bytearray()
 
     def request(self, command: str) -> dict[str, Any]:
         """Send a supported command and return its matching JSON event.
@@ -117,16 +118,24 @@ class MissionLinkSerialClient:
         while True:
             if time.monotonic() >= deadline:
                 raise SerialTimeout("response_timeout")
-            raw = self._port.readline()
-            if not raw:
-                continue
-            if len(raw) > self._max_event_bytes:
+            if b"\n" in self._pending:
+                line, _, remaining = self._pending.partition(b"\n")
+                self._pending = bytearray(remaining)
+            else:
+                raw = self._port.readline()
+                if not raw:
+                    continue
+                self._pending.extend(raw)
+                if len(self._pending) > self._max_event_bytes:
+                    raise SerialProtocolError("event_too_large")
+                if b"\n" not in self._pending:
+                    # PySerial can return a partial line when its per-read
+                    # timeout expires; retain bytes until a complete line.
+                    continue
+                line, _, remaining = self._pending.partition(b"\n")
+                self._pending = bytearray(remaining)
+            if len(line) > self._max_event_bytes:
                 raise SerialProtocolError("event_too_large")
-            if not raw.endswith(b"\n"):
-                # readline() may return a partial line on timeout; don't parse
-                # it as a complete JSON event.
-                continue
-            line = raw[:-1]
             if line.endswith(b"\r"):
                 line = line[:-1]
             try:

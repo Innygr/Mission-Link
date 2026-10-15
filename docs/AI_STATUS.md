@@ -1,3 +1,21 @@
+### 2026-10-15 — Gateway authorization regression coverage
+- **Owner:** ChatGPT
+- **Status:** additional tests committed on `feat/loopback-gateway-api`; CI rerun pending.
+- **Changed paths:** `host/tests/test_missionlink_gateway.py`.
+- **Added coverage:** missing bearer token on dispatch, authenticated principal without service ACL, malformed envelope, expired request, and duplicate request replay.
+- **Validation:** earlier CI run passed the native packet/mesh tests and complete host suite with the initial gateway tests. The new regression tests have not yet been validated by CI.
+- **Limits unchanged:** experimental loopback-only host API; no LAN/Internet listener, TLS, durable replay cache, radio bridge, or hardware/OTA test. RF remains disabled.
+
+### 2026-10-15 — Loopback-only local gateway API
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `feat/loopback-gateway-api`; awaiting CI and review. Stacked on PR #13, which is itself stacked on PR #12.
+- **Changed paths:** `host/missionlink_gateway.py`, `host/tests/test_missionlink_gateway.py`, `docs/LOCAL_GATEWAY_API.md`.
+- **Implemented:** explicit IPv4 loopback-only bind; bearer-token-to-principal mapping; token configuration minimum length; authenticated `GET /v1/services` with endpoint URLs omitted; authenticated `POST /v1/dispatch` with content-type and 180-byte body limits; dispatch through the existing service ACL, expiry, health, operation and replay checks; no-store/security headers; stable error responses; request logging disabled.
+- **Tests added:** loopback bind rejection, weak/empty token config, auth requirement, metadata sanitization, correlated service dispatch, invalid media type, oversized body, and unknown routes.
+- **Validation:** source and test fixtures reviewed through GitHub; no local checkout is available in this tool session, so tests have not been run locally. Await GitHub Actions before claiming CI success.
+- **Limitations:** this is an experimental local HTTP library, not a production daemon. No TLS, remote/LAN listener, token rotation, OS-level isolation, persistent replay cache, service plugins, LAN/USB transport, LoRa delivery, or hardware test. RF remains disabled.
+- **Next:** use CI to catch integration/test issues, then review the stacked PRs and retarget only after their dependencies are merged.
+
 ### 2026-10-15 — Fail-closed host service dispatch policy
 - **Owner:** ChatGPT
 - **Status:** implementation committed on `feat/service-dispatch-policy`; [PR #13](https://github.com/Innygr/Mission-Link/pull/13) open, stacked on PR #12.

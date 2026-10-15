@@ -1,3 +1,12 @@
+### 2026-10-15 — Local Mesh Number contact book
+- **Owner:** ChatGPT
+- **Status:** initial implementation and tests committed on `feat/local-contact-book`; CI pending.
+- **Changed paths:** `host/missionlink_contacts.py`, `host/tests/test_missionlink_contacts.py`, `docs/LOCAL_CONTACT_BOOK.md`.
+- **Implemented:** strict `(777)-XXX-XXXX` address validation; local labels; separate optional routing node ID, public-key fingerprint, and last-seen timestamp; bounded 512-contact book; strict versioned JSON import/export; duplicate rejection; atomic local save and bounded load.
+- **Tests added:** validation, lookup/rename/removal, identity-field separation, duplicate address rejection, stable round-trip, schema rejection, count/file-size bounds, and atomic persistence.
+- **Security limits:** fingerprints are stored but not verified; no address allocation/anti-collision authority, node discovery, sync, encryption-at-rest, UI, or messaging. Local OS permissions remain the caller's responsibility.
+- **Validation:** no CI result yet; no hardware or RF behavior is involved.
+
 ## AI-to-AI collaboration handoff (read before making changes)
 
 - **Coordination issue:** https://github.com/Innygr/Mission-Link/issues/4

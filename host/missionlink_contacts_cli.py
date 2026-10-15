@@ -5,6 +5,7 @@ This is a local file utility only; it does not discover nodes or send messages.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 import sys
@@ -22,6 +23,8 @@ def _parser() -> argparse.ArgumentParser:
     commands.add_parser("list", help="list saved contacts")
     find_cmd = commands.add_parser("find", help="find contacts by Mesh Number or label text")
     find_cmd.add_argument("query", help="case-insensitive substring of a label or Mesh Number")
+    show = commands.add_parser("show", help="print one contact as machine-readable JSON")
+    show.add_argument("mesh_number", help="exact Mesh Number to look up")
     add = commands.add_parser("add", help="add or replace a contact")
     add.add_argument("mesh_number")
     add.add_argument("label")
@@ -81,6 +84,20 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         book = _load(args.file)
+        if args.command == "show":
+            contact = book.get(args.mesh_number)
+            if contact is None:
+                print("Contact not found.", file=sys.stderr)
+                return 1
+            print(json.dumps({
+                "mesh_number": contact.mesh_number,
+                "label": contact.label,
+                "node_id": contact.node_id,
+                "public_key_fingerprint": contact.public_key_fingerprint,
+                "last_seen_ms": contact.last_seen_ms,
+            }, ensure_ascii=False, allow_nan=False, separators=(",", ":")))
+            return 0
+
         if args.command == "find":
             query = args.query.strip().casefold()
             if not query:

@@ -85,7 +85,8 @@ class MissionLinkSerialClient:
         if hasattr(port, "timeout"):
             port_timeout = getattr(port, "timeout", None)
             try:
-                port.timeout = 0.25 if port_timeout is None else min(float(port_timeout), 0.25)
+                read_timeout = min(0.25, float(timeout_seconds))
+                port.timeout = read_timeout if port_timeout is None else min(float(port_timeout), read_timeout)
             except (AttributeError, TypeError, ValueError):
                 pass
         self._timeout_seconds = float(timeout_seconds)

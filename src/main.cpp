@@ -137,7 +137,13 @@ static void dispatchCommand(String cmd) {
     out += radioStatus.receiving ? "true" : "false";
     out += ",\"radioState\":\"";
     out += radioStateName(radioStatus.state);
-    out += "\",\"preset\":\"";
+    out += "\",\"settingsReady\":";
+    out += settingsStoreReady ? "true" : "false";
+    const bool presetPersisted = settingsStoreReady &&
+        settingsStore.getString("preset", "client") == ml::presetName(activePreset);
+    out += ",\"presetPersisted\":";
+    out += presetPersisted ? "true" : "false";
+    out += ",\"preset\":\"";
     out += ml::presetName(activePreset);
     out += "\"}";
     report(out);

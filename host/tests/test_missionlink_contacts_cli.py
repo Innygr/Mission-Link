@@ -45,6 +45,15 @@ class ContactBookCliTests(unittest.TestCase):
                 self.assertEqual(main(["--file", str(path), "find", "111-2222"]), 0)
             self.assertIn("Mission gateway", output.getvalue())
 
+    def test_find_rejects_empty_query(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "contacts.json"
+            errors = io.StringIO()
+            with contextlib.redirect_stderr(errors):
+                result = main(["--file", str(path), "find", "   "])
+            self.assertEqual(result, 2)
+            self.assertIn("Search query must not be empty.", errors.getvalue())
+
     def test_find_without_matches_returns_nonzero(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "contacts.json"

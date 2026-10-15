@@ -30,10 +30,10 @@ Preset selection is persisted in ESP32 NVS (internal flash) and restored at boot
 
 ## Events
 
-Status response (firmware 0.2.1; fields may evolve). `radioReady` is true only when the adapter is initialized and reports `ready`; `radioState` gives the adapter state. With the default unverified pin map and disabled RF, expect `pinmap_unverified` and `radioReady:false`:
+Status response (firmware 0.2.1; fields may evolve). `radioReady` is true only when the adapter is initialized and reports `ready`; `radioState` gives the adapter state. With the default unverified pin map and disabled RF, expect `pinmap_unverified` and `radioReady:false`. `settingsReady` reports whether internal-flash NVS initialized; `presetPersisted` reports whether the active preset matches the saved NVS value:
 
 ```json
-{"type":"status","firmware":"0.2.1","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false,"radioInitialized":false,"radioReceiving":false,"radioState":"pinmap_unverified","preset":"client"}
+{"type":"status","firmware":"0.2.1","protocolVersion":1,"rfEnabled":false,"bleReady":true,"serialReady":true,"radioReady":false,"radioInitialized":false,"radioReceiving":false,"radioState":"pinmap_unverified","settingsReady":true,"presetPersisted":true,"preset":"client"}
 ```
 
 Preset list response:

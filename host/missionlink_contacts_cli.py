@@ -20,6 +20,8 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     commands.add_parser("list", help="list saved contacts")
+    find_cmd = commands.add_parser("find", help="find contacts by Mesh Number or label text")
+    find_cmd.add_argument("query", help="case-insensitive substring of a label or Mesh Number")
     add = commands.add_parser("add", help="add or replace a contact")
     add.add_argument("mesh_number")
     add.add_argument("label")
@@ -79,6 +81,20 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         book = _load(args.file)
+        if args.command == "find":
+            query = args.query.casefold()
+            matches = [
+                contact for contact in book.list_contacts()
+                if query in contact.mesh_number.casefold() or query in contact.label.casefold()
+            ]
+            if not matches:
+                print("No matching contacts.")
+                return 1
+            for contact in matches:
+                suffix = f" [node: {contact.node_id}]" if contact.node_id else ""
+                print(f"{contact.mesh_number}\\t{contact.label}{suffix}")
+            return 0
+
         if args.command == "list":
             if not len(book):
                 print("No contacts.")

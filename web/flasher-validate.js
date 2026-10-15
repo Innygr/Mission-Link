@@ -31,7 +31,17 @@ export function parsePartitionTable(bytes) {
   for (let off = 0; off + 32 <= bytes.length; off += 32) {
     if (bytes[off] === 0xEB && bytes[off + 1] === 0xEB) continue; // MD5 checksum entry
     if (bytes[off] !== 0xAA || bytes[off + 1] !== 0x50) {
-      if (off === 0) errors.push("Partition table does not start with the 0xAA50 entry magic.");
+      // ESP-IDF pads unused partition-table slots with 0xFF. Accept that
+      // terminator, but don't silently ignore corruption after valid entries.
+      let paddingOnly = true;
+      for (let i = off; i < bytes.length; i++) {
+        if (bytes[i] !== 0xFF) { paddingOnly = false; break; }
+      }
+      if (!paddingOnly) {
+        errors.push(off === 0
+          ? "Partition table does not start with the 0xAA50 entry magic."
+          : "Partition table contains malformed data at offset " + hex(off) + ".");
+      }
       break;
     }
     const dv = new DataView(bytes.buffer, bytes.byteOffset + off, 32);

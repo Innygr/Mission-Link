@@ -1,3 +1,15 @@
+### 2026-10-15 — mOS internal-flash and TF/microSD storage architecture
+- **Owner:** ChatGPT
+- **Status:** design note committed on `docs/mos-storage-layout`; implementation not yet started.
+- **Changed paths:** `docs/MOS_STORAGE_ARCHITECTURE.md`, `docs/AI_STATUS.md`.
+- **Decision:** boot-critical mOS firmware, LoRa stack, mesh/router, protocol validation, security code, and minimum recovery configuration belong on internal flash. Contacts, message history, receipts, logs, preferences, and optional large assets belong on TF/microSD.
+- **Reliability requirements:** device must boot without a card; no auto-formatting; bounded files; versioned schema validation; recoverable writes; avoid high-frequency writes; never store private keys as plaintext card files.
+- **Validation:** documentation-only; no firmware build, SD-card driver, board wiring, or physical card test performed.
+- **Blocker before implementation:** identify the exact round-display model and SD interface/pin mapping, then confirm the actual flash partition layout. Do not guess chip-select pins or claim SD support is implemented.
+- **Next action:** implement a storage manager after board wiring is confirmed, then add tested contact persistence before message history.
+
+---
+
 ### 2026-10-15 — Machine-readable contact lookup
 - **Owner:** ChatGPT
 - **Status:** committed on `feat/local-contact-book`; CI status for this latest change must be checked separately.

@@ -53,7 +53,8 @@ bool isSafeRelativePath(const char* path) {
   for (const char* cursor = path;; ++cursor) {
     if (*cursor == '/' || *cursor == '\0') {
       const size_t segmentLength = static_cast<size_t>(cursor - segment);
-      if (segmentLength == 2 && segment[0] == '.' && segment[1] == '.') {
+      if ((segmentLength == 1 && segment[0] == '.') ||
+          (segmentLength == 2 && segment[0] == '.' && segment[1] == '.')) {
         return false;
       }
       if (*cursor == '\0') {

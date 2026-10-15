@@ -47,6 +47,17 @@ export function parsePartitionTable(bytes) {
     const dv = new DataView(bytes.buffer, bytes.byteOffset + off, 32);
     entries.push({ type: bytes[off + 2], subtype: bytes[off + 3], offset: dv.getUint32(4, true), size: dv.getUint32(8, true) });
   }
+  // A truncated final entry must not be silently ignored. Short trailing
+  // bytes are only valid when they are erased padding.
+  const remainder = bytes.length % 32;
+  if (remainder) {
+    const start = bytes.length - remainder;
+    let paddingOnly = true;
+    for (let i = start; i < bytes.length; i++) {
+      if (bytes[i] !== 0xFF) { paddingOnly = false; break; }
+    }
+    if (!paddingOnly) errors.push("Partition table has a truncated or malformed trailing entry.");
+  }
   if (!errors.length && !entries.length) errors.push("Partition table contains no entries.");
   return { errors, entries };
 }

@@ -71,10 +71,11 @@ class LocalGatewayTests(unittest.TestCase):
                 create_gateway_server(host, 0, None, None, {TOKEN: "local-client"})
 
     def test_gateway_rejects_weak_or_empty_token_configuration(self):
-        server_args = ( "127.0.0.1", 0, None, None )
+        registry = ServiceRegistry()
+        dispatcher = ServiceDispatcher(registry, {"local-client": frozenset()})
         for tokens in ({}, {"short": "local-client"}):
             with self.subTest(tokens=tokens), self.assertRaises(GatewayConfigurationError):
-                create_gateway_server(*server_args, tokens)
+                create_gateway_server("127.0.0.1", 0, dispatcher, registry, tokens)
 
     def test_authentication_is_required_for_service_discovery(self):
         status, body, headers = http_call(self.base + "/v1/services", token=None)

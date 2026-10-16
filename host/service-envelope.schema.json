@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://innygr.github.io/Mission-Link/schemas/service-envelope-v1.json",
+  "title": "MissionLink Service Envelope v1",
+  "description": "Compact wire envelope. Runtime code additionally enforces a 180-byte encoded limit, a five-minute lifetime, and payload depth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "k", "rid", "sid", "op", "t", "x", "p"],
+  "properties": {
+    "v": { "const": 1 },
+    "k": { "enum": ["request", "response", "error"] },
+    "rid": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,48}$" },
+    "sid": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "op": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "t": { "type": "integer", "minimum": 0, "description": "Creation time in Unix milliseconds." },
+    "x": { "type": "integer", "minimum": 0, "description": "Expiry time in Unix milliseconds." },
+    "p": { "type": "object" },
+    "e": { "enum": ["bad_request", "forbidden", "not_found", "unavailable", "too_large", "expired", "internal"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "k": { "const": "error" } }, "required": ["k"] },
+      "then": { "required": ["e"] },
+      "else": { "not": { "required": ["e"] } }
+    }
+  ]
+}

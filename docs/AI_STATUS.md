@@ -37,6 +37,128 @@
 - **Not validated / limits:** QEMU's ESP32-S3 ROM can't do UART download (it panics on sync; Python esptool fails too), so runs (a)/(b) used the emulated **classic ESP32** with the S3 chip checks relaxed for that test only. Not tested: real XIAO hardware, USB-JTAG reset/re-enumeration, the real Web Serial implementation, booting the flashed app, and anything RF.
 - **Next:** maintainer: flash a spare XIAO from the deployed page and share the log plus serial output after RESET. ChatGPT: review the connect change in `web/flasher.js`. Optionally, a manifest with version/commit/SHA-256 for `web/firmware/` would let the page show which build it installs and detect a mixed deploy.
 
+### 2026-10-15 — Add hardware-independent mOS storage guards
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `docs/mos-storage-layout`; CI pending.
+- **Changed paths:** `include/mos_storage.h`, `src/mos_storage.cpp`, `test/test_mos_storage/test_mos_storage.cpp`, `platformio.ini`, `docs/MOS_STORAGE_ARCHITECTURE.md`.
+- **Implemented:** a portable removable-storage state classifier (`absent` vs `ready` vs `error`), strict relative-path validation (including traversal and length bounds), and a size-limit helper. Added native tests and included the new source in the native PlatformIO test build.
+- **Validation:** tests are committed but CI has not yet run on this new head. No filesystem mount, TF-card I/O, contact/message persistence, or physical-board test is claimed.
+- **Safety/limits:** no SD pins or card interface guessed; no auto-formatting; RF remains disabled.
+- **Next:** verify CI; once the round-display model and SD wiring are known, add the hardware mount adapter and then bounded contact persistence.
+
+---
+
+### 2026-10-15 — Correct preset persistence detection
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI pending.
+- **Changed paths:** `src/main.cpp`.
+- **Fix:** ESP32 NVS reads with a default value can make an absent `preset` key look saved. Firmware now checks `isKey("preset")` before skipping writes and before reporting `presetPersisted:true`. This ensures choosing the default Client preset actually creates a saved record.
+- **Validation:** source-level review; CI pending and no physical hardware test.
+- **Next:** verify CI and continue storage implementation after board-specific SD wiring is known.
+
+---
+
+### 2026-10-15 — Expose internal settings health
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI triggered for this change.
+- **Changed paths:** `src/main.cpp`, `docs/CLIENT_PROTOCOL.md`.
+- **Implemented:** `status` now includes `settingsReady` (whether NVS initialized) and `presetPersisted` (whether the active preset matches the saved value), so a client can diagnose flash-setting persistence without trying a write.
+- **Validation:** source and protocol example updated together; awaiting ESP32-S3 CI. No physical board test.
+- **Limits:** reports NVS/preset status only; it does not claim TF/microSD or contact/message storage is available. RF remains disabled.
+- **Next:** confirm CI, then continue with storage work only where hardware details are verified.
+
+---
+
+### 2026-10-15 — Document persistent preset response
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI is running for the branch head.
+- **Changed paths:** `docs/CLIENT_PROTOCOL.md`.
+- **Implemented:** protocol docs now describe NVS-backed preset restore, runtime-only fallback, write-failure behavior, and the `persisted` response field.
+- **Validation:** documentation reviewed against current firmware source; no physical device test.
+- **Next action:** confirm the ESP32-S3 build and native tests on the final PR head.
+
+---
+
+### 2026-10-15 — Persist node preset in internal flash
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `docs/mos-storage-layout`; CI not yet verified for this change.
+- **Changed paths:** `src/main.cpp`, `docs/MOS_STORAGE_ARCHITECTURE.md`.
+- **Implemented:** firmware uses ESP32 `Preferences`/NVS to restore the selected client/repeater/gateway preset at boot and persist future changes. The preset response reports whether it was persisted. If NVS cannot initialize, preset changes are runtime-only with a warning; a failed write prevents applying the new preset. Re-selecting the already-saved preset skips a redundant NVS write to reduce flash wear.
+- **Validation:** source-level review only so far. ESP32-S3 compilation and firmware tests must be checked in GitHub Actions; no physical board test performed.
+- **Limits:** only this small setting is persisted internally. No TF/microSD driver, contact/message storage, or key storage is implemented. RF remains disabled.
+- **Next action:** verify ESP32-S3 CI; then implement card support only after the exact round-display model and SD wiring are confirmed.
+
+---
+
+### 2026-10-15 — mOS internal-flash and TF/microSD storage architecture
+- **Owner:** ChatGPT
+- **Status:** design note committed on `docs/mos-storage-layout`; implementation not yet started.
+- **Changed paths:** `docs/MOS_STORAGE_ARCHITECTURE.md`, `docs/AI_STATUS.md`.
+- **Decision:** boot-critical mOS firmware, LoRa stack, mesh/router, protocol validation, security code, and minimum recovery configuration belong on internal flash. Contacts, message history, receipts, logs, preferences, and optional large assets belong on TF/microSD.
+- **Reliability requirements:** device must boot without a card; no auto-formatting; bounded files; versioned schema validation; recoverable writes; avoid high-frequency writes; never store private keys as plaintext card files.
+- **Validation:** documentation-only; no firmware build, SD-card driver, board wiring, or physical card test performed.
+- **Blocker before implementation:** identify the exact round-display model and SD interface/pin mapping, then confirm the actual flash partition layout. Do not guess chip-select pins or claim SD support is implemented.
+- **Next action:** implement a storage manager after board wiring is confirmed, then add tested contact persistence before message history.
+
+---
+
+### 2026-10-15 — Machine-readable contact lookup
+- **Owner:** ChatGPT
+- **Status:** committed on `feat/local-contact-book`; CI status for this latest change must be checked separately.
+- **Commits:** [CLI JSON lookup](https://github.com/Innygr/Mission-Link/commit/d28b9edeedc196e44bc36a6854f14ebb2a5385ea), [lookup tests](https://github.com/Innygr/Mission-Link/commit/7f953a931b459a98989897ee8518d6f08d8d1399), [CLI docs](https://github.com/Innygr/Mission-Link/commit/d7736b6af293ad27bbe97c5f791959df1cf27b7f).
+- **Changed paths:** `host/missionlink_contacts_cli.py`, `host/tests/test_missionlink_contacts_cli.py`, `docs/LOCAL_CONTACT_BOOK.md`.
+- **Implemented:** `show '(777)-XXX-XXXX'` returns one compact JSON contact record on stdout with stable keys; missing contacts return exit code 1 and an error on stderr without corrupting stdout. Added tests for JSON shape and missing-contact behavior.
+- **Validation:** preceding contact-book head passed the full GitHub Actions workflow [#38763226738](https://github.com/Innygr/Mission-Link/actions/runs/38763226738), including host/native tests and ESP32-S3 build plus flash-set validation. That run predates this JSON lookup change; check CI for the latest commit before claiming the new tests passed. No physical hardware or RF test performed.
+- **Limits:** this is a local lookup interface for scripts/future clients, not a messaging API, network endpoint, node discovery feature, or radio transport. RF remains disabled.
+- **Next:** verify CI on the latest branch head, then add a small reusable Python contact-resolver interface for future GUI/gateway clients without spawning a subprocess or exposing the contact file format directly.
+
+---
+
+### 2026-10-15 — Local Mesh Number contact book
+- **Owner:** ChatGPT
+- **Status:** initial implementation and tests committed on `feat/local-contact-book`; CI pending.
+- **Changed paths:** `host/missionlink_contacts.py`, `host/tests/test_missionlink_contacts.py`, `docs/LOCAL_CONTACT_BOOK.md`.
+- **Implemented:** strict `(777)-XXX-XXXX` address validation; local labels; separate optional routing node ID, public-key fingerprint, and last-seen timestamp; bounded 512-contact book; strict versioned JSON import/export; duplicate rejection; atomic local save and bounded load.
+- **Tests added:** validation, lookup/rename/removal, identity-field separation, duplicate address rejection, stable round-trip, schema rejection, count/file-size bounds, and atomic persistence.
+- **Security limits:** fingerprints are stored but not verified; no address allocation/anti-collision authority, node discovery, sync, encryption-at-rest, UI, or messaging. Local OS permissions remain the caller's responsibility.
+- **Validation:** no CI result yet; no hardware or RF behavior is involved.
+
+## AI-to-AI collaboration handoff (read before making changes)
+
+### 2026-10-14 — Bounded service request/response envelopes
+- **Owner:** ChatGPT
+- **Status:** implementation committed on a feature branch; PR #12 open; first CI run found an oversized error envelope, fixed with compact wire keys; rerun pending.
+- **Task:** advance Issue #10's service protocol groundwork.
+- **PR:** https://github.com/Innygr/Mission-Link/pull/12
+- **Changed paths:** `host/missionlink_envelopes.py`, `host/tests/test_missionlink_envelopes.py`, `host/service-envelope.schema.json`, `docs/SERVICE_ENVELOPES.md`
+- **Implemented:** version-1 request/response/error envelope codec with compact wire keys; strict identifier and timestamp bounds; five-minute maximum lifetime; bounded JSON payload depth; allowlisted error codes; rejection of unknown fields and unsupported versions; 180-byte encoded envelope ceiling; JSON Schema and unit tests.
+- **Validation:** first GitHub Actions run caught one failing test because the verbose error-envelope fields exceeded 180 bytes; compact wire keys now reduce overhead, and the test has been updated. Awaiting CI rerun to verify the fix. No live gateway, network listener, authentication, replay protection, encryption, radio routing, or hardware test added.
+- **Safety:** RF remains disabled; the size ceiling does not guarantee a given radio configuration can carry a full envelope.
+- **Next:** review CI output, fix any test issues, then use the codec as a validation layer in a later authenticated gateway/API implementation.
+
+
+- **Coordination issue:** https://github.com/Innygr/Mission-Link/issues/4
+- **Shared source of truth:** this repository, its commits/branches/PRs, and this status file. Claude and ChatGPT do not have a direct private-chat channel to each other; use commits, PRs, and this log as the handoff mechanism.
+- **Before work:** inspect recent commits, open PRs/issues, and this file. Do not assume another assistant's work is finished just because the plan mentions it.
+- **Avoid collisions:** Claude owns `web/flasher.html`, `web/flasher.js`, and `web/flasher.css` by default. ChatGPT focuses on host services, firmware, mesh protocol/routing, tests, and documentation, after checking current changes. Ask the maintainer before crossing ownership boundaries.
+- **After work:** record owner, task, changed paths, commit/PR URLs, validation actually run, limitations/blockers, next action, and files that should not be edited concurrently.
+- **Truthful validation:** distinguish source review, local tests, CI results, and physical hardware tests. Never claim a check passed without seeing its result.
+- **RF safety gate:** keep `ML_RF_ENABLED=0` until the exact hardware/pinout/RF switch/antenna path and Canadian compliance are verified and the maintainer approves.
+- **Recent ChatGPT host-service hardening:** [validation changes](https://github.com/Innygr/Mission-Link/commit/81bd7a827741cf085a4d32d7d5e4a9f65ec84d77) and [edge-case tests](https://github.com/Innygr/Mission-Link/commit/a4d67c43a95d3a7ba8154ddfd468f5407094355d). CI has not yet been confirmed for these commits.
+
+---
+
+### 2026-10-14 — Cross-platform host services foundation
+- **Owner:** ChatGPT, requested by maintainer.
+- **Status:** initial code and docs committed; CI execution not yet confirmed.
+- **Task:** [Issue #3 — platform-independent mesh gateway compatibility](https://github.com/Innygr/Mission-Link/issues/3).
+- **Commits:** [service registry](https://github.com/Innygr/Mission-Link/commit/4c6168ec20b88578230d11375d98fc6d8064c690), [registry tests](https://github.com/Innygr/Mission-Link/commit/87cd025ce45c32534062957f085799b0ba11e581), [test import fix](https://github.com/Innygr/Mission-Link/commit/9da4e9ae205b6ce1d263a5655b95090925a4dc31), [host package marker](https://github.com/Innygr/Mission-Link/commit/8467ea46f55a48ac08d45484488a74d01a289f66), [host-services architecture](https://github.com/Innygr/Mission-Link/commit/95faaa1bab6b45035e4cbd5f9c773d06a9cffd90), [CI tests](https://github.com/Innygr/Mission-Link/commit/c76d7b1cf4fe0a453b7c0c84e666a185eeb4e2b1), [README](https://github.com/Innygr/Mission-Link/commit/57aab985ccd2934b3f4da31f69198b60c85eef69).
+- **Changed paths:** `host/missionlink_services.py`, `host/tests/test_missionlink_services.py`, `host/__init__.py`, `docs/HOST_SERVICES.md`, `.github/workflows/firmware-ci.yml`, `README.md`.
+- **Implemented:** platform-independent bounded service registry with stable host/service IDs, capability filtering, health filtering, transport metadata, and conservative mesh-inline payload policy. Added unittest coverage and a CI step. Documented that large file/model data should use an authenticated direct transport while LoRa carries discovery/control metadata.
+- **Not implemented yet:** a live gateway API/server, LAN or USB transport adapter, host discovery, file-storage plugin, local-AI plugin, production authentication, or end-to-end security. This is not yet usable as a live service bridge.
+- **Safety:** `ML_RF_ENABLED` remains `0`; no RF setting was changed and no hardware test is claimed.
+- **Next:** verify CI tests, harden endpoint/schema validation, then design a versioned authenticated gateway API with loopback-first binding and explicit permissions.
+
 ### 2026-10-14 — Enable receive-only Wio-SX1262 radio path
 - **Owner:** ChatGPT, requested by maintainer.
 - **Status:** configuration committed; ESP32-S3 CI build and native tests running.

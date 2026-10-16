@@ -1,3 +1,68 @@
+### 2026-10-15 — Add hardware-independent mOS storage guards
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `docs/mos-storage-layout`; CI pending.
+- **Changed paths:** `include/mos_storage.h`, `src/mos_storage.cpp`, `test/test_mos_storage/test_mos_storage.cpp`, `platformio.ini`, `docs/MOS_STORAGE_ARCHITECTURE.md`.
+- **Implemented:** a portable removable-storage state classifier (`absent` vs `ready` vs `error`), strict relative-path validation (including traversal and length bounds), and a size-limit helper. Added native tests and included the new source in the native PlatformIO test build.
+- **Validation:** tests are committed but CI has not yet run on this new head. No filesystem mount, TF-card I/O, contact/message persistence, or physical-board test is claimed.
+- **Safety/limits:** no SD pins or card interface guessed; no auto-formatting; RF remains disabled.
+- **Next:** verify CI; once the round-display model and SD wiring are known, add the hardware mount adapter and then bounded contact persistence.
+
+---
+
+### 2026-10-15 — Correct preset persistence detection
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI pending.
+- **Changed paths:** `src/main.cpp`.
+- **Fix:** ESP32 NVS reads with a default value can make an absent `preset` key look saved. Firmware now checks `isKey("preset")` before skipping writes and before reporting `presetPersisted:true`. This ensures choosing the default Client preset actually creates a saved record.
+- **Validation:** source-level review; CI pending and no physical hardware test.
+- **Next:** verify CI and continue storage implementation after board-specific SD wiring is known.
+
+---
+
+### 2026-10-15 — Expose internal settings health
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI triggered for this change.
+- **Changed paths:** `src/main.cpp`, `docs/CLIENT_PROTOCOL.md`.
+- **Implemented:** `status` now includes `settingsReady` (whether NVS initialized) and `presetPersisted` (whether the active preset matches the saved value), so a client can diagnose flash-setting persistence without trying a write.
+- **Validation:** source and protocol example updated together; awaiting ESP32-S3 CI. No physical board test.
+- **Limits:** reports NVS/preset status only; it does not claim TF/microSD or contact/message storage is available. RF remains disabled.
+- **Next:** confirm CI, then continue with storage work only where hardware details are verified.
+
+---
+
+### 2026-10-15 — Document persistent preset response
+- **Owner:** ChatGPT
+- **Status:** committed on `docs/mos-storage-layout`; CI is running for the branch head.
+- **Changed paths:** `docs/CLIENT_PROTOCOL.md`.
+- **Implemented:** protocol docs now describe NVS-backed preset restore, runtime-only fallback, write-failure behavior, and the `persisted` response field.
+- **Validation:** documentation reviewed against current firmware source; no physical device test.
+- **Next action:** confirm the ESP32-S3 build and native tests on the final PR head.
+
+---
+
+### 2026-10-15 — Persist node preset in internal flash
+- **Owner:** ChatGPT
+- **Status:** implementation committed on `docs/mos-storage-layout`; CI not yet verified for this change.
+- **Changed paths:** `src/main.cpp`, `docs/MOS_STORAGE_ARCHITECTURE.md`.
+- **Implemented:** firmware uses ESP32 `Preferences`/NVS to restore the selected client/repeater/gateway preset at boot and persist future changes. The preset response reports whether it was persisted. If NVS cannot initialize, preset changes are runtime-only with a warning; a failed write prevents applying the new preset. Re-selecting the already-saved preset skips a redundant NVS write to reduce flash wear.
+- **Validation:** source-level review only so far. ESP32-S3 compilation and firmware tests must be checked in GitHub Actions; no physical board test performed.
+- **Limits:** only this small setting is persisted internally. No TF/microSD driver, contact/message storage, or key storage is implemented. RF remains disabled.
+- **Next action:** verify ESP32-S3 CI; then implement card support only after the exact round-display model and SD wiring are confirmed.
+
+---
+
+### 2026-10-15 — mOS internal-flash and TF/microSD storage architecture
+- **Owner:** ChatGPT
+- **Status:** design note committed on `docs/mos-storage-layout`; implementation not yet started.
+- **Changed paths:** `docs/MOS_STORAGE_ARCHITECTURE.md`, `docs/AI_STATUS.md`.
+- **Decision:** boot-critical mOS firmware, LoRa stack, mesh/router, protocol validation, security code, and minimum recovery configuration belong on internal flash. Contacts, message history, receipts, logs, preferences, and optional large assets belong on TF/microSD.
+- **Reliability requirements:** device must boot without a card; no auto-formatting; bounded files; versioned schema validation; recoverable writes; avoid high-frequency writes; never store private keys as plaintext card files.
+- **Validation:** documentation-only; no firmware build, SD-card driver, board wiring, or physical card test performed.
+- **Blocker before implementation:** identify the exact round-display model and SD interface/pin mapping, then confirm the actual flash partition layout. Do not guess chip-select pins or claim SD support is implemented.
+- **Next action:** implement a storage manager after board wiring is confirmed, then add tested contact persistence before message history.
+
+---
+
 ### 2026-10-15 — Machine-readable contact lookup
 - **Owner:** ChatGPT
 - **Status:** committed on `feat/local-contact-book`; CI status for this latest change must be checked separately.
